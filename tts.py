@@ -156,12 +156,12 @@ def synthesize(text: str, out_path: Path) -> Path:
     raise RuntimeError(f"all TTS engines failed; last error: {last_error}")
 
 
-def duration_seconds(path: Path) -> int:
-    """Length of the finished MP3, for the player UI and the RSS feed."""
+def duration_exact(path: Path) -> float:
+    """Length of the finished MP3 in seconds, unrounded."""
     try:
         from mutagen.mp3 import MP3
 
-        return int(MP3(str(path)).info.length)
+        return float(MP3(str(path)).info.length)
     except Exception:
         pass
     if shutil.which("ffprobe"):
@@ -171,7 +171,68 @@ def duration_seconds(path: Path) -> int:
                  "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
                 capture_output=True, text=True, check=True,
             )
-            return int(float(out.stdout.strip()))
+            return float(out.stdout.strip())
         except Exception:
             pass
-    return 0
+    return 0.0
+
+
+def duration_seconds(path: Path) -> int:
+    """Length of the finished MP3, for the player UI and the RSS feed."""
+    return int(duration_exact(path))
+
+
+def fit_duration(path: Path, limit_seconds: float, max_tempo: float = 1.15) -> float:
+    """Make sure a finished cut is no longer than its time limit.
+
+    The show promises a brief of at most three minutes, and for its first
+    three days it broke that promise: scripts were sized for an assumed 165
+    words a minute, the voice actually reads at about 152, and the model
+    drifts over its word limit besides. Four "45-second" cuts ran 3:27.
+
+    A word count is a request; this is the guarantee. If the audio came out
+    over its limit, it is sped up just enough to fit -- pitch preserved, and
+    capped at max_tempo so it never sounds rushed. Up to about 1.15x is hard
+    to notice in speech. A cut that would need more than that is left at the
+    cap and reported, because that means the script itself is too long.
+
+    Returns the final duration in seconds.
+    """
+    actual = duration_exact(path)
+    # A few hundredths over is encoder padding, not a long script, and is not
+    # worth a second lossy encode.
+    if actual <= 0 or actual <= limit_seconds + 0.3:
+        return actual
+    if not shutil.which("ffmpeg"):
+        print(f"  ! {path.name} is {actual:.0f}s (limit {limit_seconds:.0f}s) "
+              f"and ffmpeg is missing, so it cannot be fitted")
+        return actual
+
+    # A hair past the exact ratio, so rounding in the encoder cannot leave
+    # the result a few milliseconds over.
+    wanted = actual / limit_seconds * 1.004
+    tempo = min(wanted, max_tempo)
+    tmp = path.with_suffix(".fit.mp3")
+    cmd = [
+        "ffmpeg", "-y", "-loglevel", "error",
+        "-i", str(path),
+        "-af", f"atempo={tempo:.4f}",
+        "-ac", "1", "-ar", "24000", "-b:a", "32k",
+        str(tmp),
+    ]
+    try:
+        subprocess.run(cmd, check=True)
+        tmp.replace(path)
+    except subprocess.CalledProcessError as exc:
+        print(f"  ! could not fit {path.name} ({exc}); keeping it at {actual:.0f}s")
+        tmp.unlink(missing_ok=True)
+        return actual
+
+    final = duration_exact(path)
+    if wanted > max_tempo:
+        print(f"  ! {path.name}: {actual:.0f}s needed {wanted:.2f}x to fit "
+              f"{limit_seconds:.0f}s; capped at {max_tempo:.2f}x, so it runs "
+              f"{final:.0f}s. The script is too long -- tighten its word limit.")
+    else:
+        print(f"  + fitted {path.name}: {actual:.1f}s -> {final:.1f}s at {tempo:.2f}x")
+    return final

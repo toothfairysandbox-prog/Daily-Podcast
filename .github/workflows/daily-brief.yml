@@ -103,10 +103,18 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_MODEL:      ${{ vars.CLAUDE_MODEL      || 'claude-sonnet-5' }}
           TTS_VOICE:         ${{ vars.TTS_VOICE         || 'en-US-AndrewMultilingualNeural' }}
-          SHOW_TITLE:        ${{ vars.SHOW_TITLE        || 'The Morning Brief' }}
-          SHOW_AUTHOR:       ${{ vars.SHOW_AUTHOR       || 'Samuel Gibby' }}
+          SHOW_TITLE:        ${{ vars.SHOW_TITLE        || 'What''s Up?' }}
+          SHOW_AUTHOR:       ${{ vars.SHOW_AUTHOR       || 'What''s Up?' }}
           RETAIN_EPISODES:   ${{ vars.RETAIN_EPISODES   || '30' }}
           VAPID_PUBLIC_KEY:  ${{ vars.VAPID_PUBLIC_KEY }}
+          # My Day. Both are secrets: the calendar address is itself the
+          # credential (anyone holding it can read the calendar), and the
+          # key is what keeps the published plan unreadable. With either
+          # one unset the feature is simply off.
+          CALENDAR_ICS_URL:  ${{ secrets.CALENDAR_ICS_URL }}
+          MYDAY_KEY:         ${{ secrets.MYDAY_KEY }}
+          MYDAY_TZ:          ${{ vars.MYDAY_TZ          || 'America/Denver' }}
+          MYDAY_EMAIL:       ${{ vars.MYDAY_EMAIL }}
           # Passed as an environment variable, never interpolated into the
           # command line: it is free text from a dispatch form, and
           # "${{ inputs.only_topics }}" inside a run block is a shell
@@ -157,6 +165,7 @@ jobs:
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           PUSH_SUBSCRIPTION: ${{ secrets.PUSH_SUBSCRIPTION }}
           VAPID_SUBJECT:     ${{ vars.VAPID_SUBJECT || 'mailto:noreply@example.com' }}
+          SHOW_TITLE:        ${{ vars.SHOW_TITLE || 'What''s Up?' }}
           # Passed as environment variables, NOT interpolated into the
           # command line. These strings are model-written from news
           # headlines: a title containing a quote breaks the argument, and
@@ -185,7 +194,7 @@ jobs:
           OWNER="${GITHUB_REPOSITORY%%/*}"
           NAME="${GITHUB_REPOSITORY#*/}"
           {
-            echo "### Morning Brief"
+            echo "### What's Up?"
             echo ""
             echo "- Triggered by: \`${{ github.event_name }}\`"
             echo "- Site: https://${OWNER,,}.github.io/${NAME}/"

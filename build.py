@@ -40,6 +40,7 @@ from zoneinfo import ZoneInfo
 from xml.sax.saxutils import escape
 
 import cover
+import myday
 import sources
 import topics as topics_cfg
 import tts
@@ -50,18 +51,23 @@ PUBLIC = Path(os.getenv("PUBLIC_DIR", ROOT / "public"))
 
 MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-5")
 RETAIN = int(os.getenv("RETAIN_EPISODES", "30"))
-SHOW_TITLE = os.getenv("SHOW_TITLE", "The Morning Brief")
+SHOW_TITLE = os.getenv("SHOW_TITLE", "What's Up?")
 SHOW_DESC = os.getenv(
     "SHOW_DESCRIPTION",
     "A daily brief you build yourself: markets, tech, sport, business, "
     "the world, science and health.",
 )
-SHOW_AUTHOR = os.getenv("SHOW_AUTHOR", "The Morning Brief")
+SHOW_AUTHOR = os.getenv("SHOW_AUTHOR", "What's Up?")
 
 # How many speech passes to run at once. Microsoft's endpoint hands out 403s
 # when leaned on, and twelve simultaneous websockets is leaning on it; four
 # keeps the whole batch inside about ninety seconds anyway.
 TTS_WORKERS = int(os.getenv("TTS_WORKERS", "4"))
+
+# The longest each cut may run, in seconds. Four short cuts is the largest
+# brief a listener can assemble, so 4 x 45 is what makes "never longer than
+# three minutes" true rather than aspirational.
+CUT_LIMITS = {"short": 45.0, "long": 180.0}
 
 # episodes.json schema version. The player checks this, so an old home-screen
 # app that hasn't refreshed its shell shows a "reload" prompt rather than
@@ -195,7 +201,7 @@ SEGMENT_TOOL = {
             "script_long": {
                 "type": "string",
                 "description": (
-                    "The ~3-minute version, 420-480 words, hard maximum 500. "
+                    "The ~3-minute version, 400-450 words, hard maximum 460. "
                     "Plain spoken prose only: no markdown, no headers, no "
                     "bullets, no stage directions."
                 ),
@@ -203,7 +209,7 @@ SEGMENT_TOOL = {
             "script_short": {
                 "type": "string",
                 "description": (
-                    "The ~45-second cut, 100-125 words, hard maximum 135. "
+                    "The ~40-second cut, 90-105 words, hard maximum 110. "
                     "No greeting, no sign-off, no reference to other segments "
                     "-- it gets stitched between them. Plain spoken prose only."
                 ),
@@ -418,12 +424,12 @@ def build_topic(topic, date_str: str, date_label: str,
         print(f"[{topic.slug}] SKIPPED: short cut came back at only "
               f"{short_words} words.")
         return None
-    if long_words > 560:
+    if long_words > 480:
         print(f"[{topic.slug}] ! long ran to {long_words} words -- tighten "
               f"long_order in topics.py if this keeps happening")
-    if short_words > 170:
+    if short_words > 118:
         print(f"[{topic.slug}] ! short cut ran to {short_words} words, which "
-              f"will push a four-topic brief past three minutes")
+              f"will need speeding up to fit its 45 seconds")
 
     seg["slug"] = topic.slug
     seg["label"] = topic.label
@@ -759,6 +765,8 @@ def main() -> int:
                      "-b:a", "32k", str(path)], check=True)
             else:
                 tts.synthesize(text, path)
+            # The word limits ask; this enforces. See tts.fit_duration.
+            tts.fit_duration(path, CUT_LIMITS[cut])
             return tts.duration_seconds(path), path.stat().st_size
 
         with ThreadPoolExecutor(max_workers=TTS_WORKERS) as pool:
@@ -888,6 +896,14 @@ def main() -> int:
     if vapid_public:
         (PUBLIC / "push.json").write_text(
             json.dumps({"vapidPublicKey": vapid_public}), encoding="utf-8")
+
+    # The owner's private day plan. Published encrypted, logged as nothing
+    # but success or failure, and never allowed to break the news build.
+    print("\nMy Day...")
+    try:
+        myday.build(PUBLIC, dry_run=args.dry_run, skip_audio=args.skip_audio)
+    except Exception as exc:  # noqa: BLE001
+        print(f"  ! My Day failed ({exc.__class__.__name__}); the news is unaffected")
 
     # Hand the notifier the details, via GITHUB_OUTPUT when in Actions. The
     # build cannot know what any individual listener picked, so the

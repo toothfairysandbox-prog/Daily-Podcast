@@ -3,16 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<title>The Morning Brief</title>
-<meta name="description" content="A daily brief you build yourself.">
+<title>What's Up?</title>
+<meta name="description" content="Your morning in three minutes: the news you picked, and your day.">
 <meta name="theme-color" content="#08090b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Brief">
+<meta name="apple-mobile-web-app-title" content="What's Up?">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" href="icons/icon-192.png">
+<link rel="preload" as="image" href="splash.webp" type="image/webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&display=swap" rel="stylesheet">
@@ -37,7 +38,116 @@
     background:radial-gradient(120% 70% at 50% 0%, var(--tint,rgba(124,108,246,.22)), transparent 70%);
     transition:background .8s var(--ease)}
   .wrap{position:relative;z-index:1;max-width:620px;margin:0 auto;
-    padding:calc(var(--safe-t) + 16px) 20px calc(var(--safe-b) + 64px)}
+    padding:calc(var(--safe-t) + 16px) 20px calc(var(--safe-b) + 64px);
+    transition:opacity .55s var(--ease),transform .7s var(--ease)}
+  /* held back until the intro hands over, then eased up into place */
+  body:not(.revealed) .wrap{opacity:0;transform:translateY(14px)}
+
+  /* ---------- intro ---------- */
+  #splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;
+    background:var(--bg);transition:opacity .5s var(--ease);
+    /* if the script never runs, do not trap the listener behind the intro */
+    animation:splashFailsafe .01s 4s forwards}
+  @keyframes splashFailsafe{to{opacity:0;visibility:hidden;pointer-events:none}}
+  #splash::before{content:"";position:absolute;inset:0;opacity:0;transform:scale(.7);
+    background:radial-gradient(60% 40% at 50% 50%,rgba(124,108,246,.32),transparent 70%);
+    transition:opacity .9s var(--ease),transform 1.7s var(--ease)}
+  #splash img{position:relative;width:min(78vw,380px);height:auto;opacity:0;
+    transform:translateY(18px) scale(.84);
+    filter:blur(12px) drop-shadow(0 22px 44px rgba(124,108,246,.5));
+    transition:opacity .6s var(--ease),transform 1.3s var(--ease),filter .7s var(--ease)}
+  #splash.in::before{opacity:1;transform:scale(1.15)}
+  #splash.in img{opacity:1;transform:none;
+    filter:blur(0) drop-shadow(0 22px 44px rgba(124,108,246,.5))}
+  #splash.out{opacity:0;pointer-events:none}
+  #splash.out img{transform:translateY(-12px) scale(1.08);
+    filter:blur(6px) drop-shadow(0 22px 44px rgba(124,108,246,.5));
+    transition:transform .5s var(--ease),filter .5s var(--ease)}
+
+  /* ---------- tabs ---------- */
+  .tabs{position:relative;display:grid;grid-template-columns:1fr 1fr;padding:3px;
+    border-radius:12px;background:rgba(255,255,255,.045);border:1px solid var(--line);
+    margin-bottom:22px}
+  .tab{position:relative;z-index:1;padding:8px 6px;font-size:13.5px;font-weight:550;
+    color:var(--muted);border-radius:9px;transition:color .2s var(--ease)}
+  .tab.on{color:var(--text)}
+  .tab-pill{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);
+    border-radius:9px;background:rgba(255,255,255,.09);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07);
+    transition:transform .34s var(--ease)}
+  body[data-tab="day"] .tab-pill{transform:translateX(100%)}
+  body[data-tab="day"] #app, body[data-tab="day"] #newsFoot,
+  body[data-tab="day"] #edit, body[data-tab="day"] .mini{display:none!important}
+  body:not([data-tab="day"]) #day{display:none}
+
+  /* ---------- my day ---------- */
+  #day{animation:fade .35s var(--ease)}
+  .day-date{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent);margin:6px 0 10px}
+  .day-over{font-size:19px;line-height:1.42;font-weight:500;letter-spacing:-.02em;
+    margin:0 0 18px;text-wrap:pretty}
+  .day-stale{font-size:12.5px;color:#e7b76a;border:1px solid rgba(231,183,106,.28);
+    background:rgba(231,183,106,.08);border-radius:10px;padding:9px 12px;margin:0 0 16px}
+  .rundown{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    padding:10px 14px 10px 10px;border-radius:14px;border:1px solid var(--line);
+    background:rgba(255,255,255,.03);position:relative;overflow:hidden;margin-bottom:18px;
+    transition:border-color .18s var(--ease),background .18s var(--ease)}
+  .rundown:hover{border-color:var(--line-hi);background:rgba(255,255,255,.05)}
+  .rundown[disabled]{opacity:.5;cursor:default}
+  .rundown-btn{width:38px;height:38px;border-radius:50%;background:var(--text);color:#0b0c0f;
+    display:grid;place-items:center;flex:none}
+  .rundown-btn svg{width:15px;height:15px}
+  .rundown-main{flex:1;min-width:0}
+  .rundown-label{display:block;font-size:14px;font-weight:550}
+  .rundown-sub{display:block;font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .rundown-bar{position:absolute;left:0;bottom:0;height:2px;width:0%;background:var(--accent)}
+  .heads{display:grid;gap:7px;margin:0 0 22px;padding:0;list-style:none}
+  .heads li{font-size:13.5px;color:#c3c8d1;line-height:1.45;padding-left:16px;position:relative}
+  .heads li::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:6px;
+    border-radius:50%;background:var(--accent)}
+  .sec-head{display:flex;align-items:center;gap:10px;margin:26px 0 6px}
+  .sec-head span{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--dim)}
+  .sec-head i{flex:1;height:1px;background:var(--line)}
+  .ev{display:grid;grid-template-columns:68px 1fr;gap:12px;padding:14px 0;
+    border-bottom:1px solid var(--line)}
+  .ev:last-child{border-bottom:0}
+  .ev.past{opacity:.45}
+  .ev-time{font-size:13px;font-weight:550;font-variant-numeric:tabular-nums;letter-spacing:0;
+    line-height:1.35;padding-top:1px}
+  .ev-time small{display:block;font-size:11.5px;font-weight:400;color:var(--dim)}
+  .ev-title{font-size:15px;font-weight:550;letter-spacing:-.015em;line-height:1.35}
+  .ev-badge{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--accent);border:1px solid rgba(124,108,246,.45);
+    border-radius:6px;padding:1px 6px;margin-left:8px;vertical-align:2px}
+  .ev-meta{font-size:12.5px;color:var(--dim);line-height:1.45;margin-top:2px}
+  .ev-prep{font-size:13.5px;line-height:1.5;color:#c3c8d1;margin-top:9px;padding:9px 12px;
+    border-radius:10px;background:rgba(255,255,255,.04);border-left:2px solid var(--line-hi)}
+  .ev-prep.high{background:rgba(124,108,246,.11);border-left-color:var(--accent)}
+  .ev-prep b{display:block;font-size:9.5px;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+  .tom{display:flex;gap:12px;padding:8px 0;font-size:13.5px;color:#c3c8d1}
+  .tom span:first-child{width:68px;flex:none;color:var(--dim);font-variant-numeric:tabular-nums}
+  .day-foot{margin-top:30px;text-align:center;font-size:12px;color:var(--dim);line-height:1.9}
+  .day-foot button{color:var(--muted);border-bottom:1px solid var(--line);font-size:12px}
+  .lock{text-align:center;padding:34px 6px 10px}
+  .lock-ico{width:54px;height:54px;border-radius:16px;margin:0 auto 18px;display:grid;
+    place-items:center;background:rgba(124,108,246,.14);color:var(--accent)}
+  .lock-ico svg{width:24px;height:24px}
+  .lock h2{font-size:22px;font-weight:650;letter-spacing:-.03em;margin:0 0 8px}
+  .lock p{color:var(--muted);font-size:14.5px;line-height:1.55;margin:0 auto 18px;max-width:30em}
+  .lock ol{text-align:left;color:#c3c8d1;font-size:14px;line-height:1.55;max-width:30em;
+    margin:0 auto 20px;padding-left:20px}
+  .lock ol li{margin-bottom:8px}
+  .lock code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+    background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px}
+  .lock input{width:100%;max-width:30em;background:#0a0b0e;color:var(--text);
+    border:1px solid var(--line-hi);border-radius:11px;padding:12px 13px;font-size:16px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin-bottom:10px}
+  .lock .cta{max-width:30em}
+  .lock-err{color:#f08a8a;font-size:13px;min-height:1.4em;margin:2px 0 8px}
+  .lock-alt{margin-top:14px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--line)}
+
   button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;letter-spacing:inherit}
   a{color:inherit}
 
@@ -47,12 +157,12 @@
     background:linear-gradient(145deg,var(--accent),var(--accent-2))}
   .mark::after{content:"";position:absolute;inset:0;border-radius:7px;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
-  .wordmark{font-size:12.5px;font-weight:600;letter-spacing:.02em;color:var(--muted)}
+  .wordmark{font-size:12.5px;font-weight:600;letter-spacing:.02em;color:var(--muted);
+    margin-right:auto}
   .iconbtn{width:34px;height:34px;display:grid;place-items:center;
     border-radius:10px;color:var(--dim);transition:all .18s var(--ease)}
   .iconbtn:hover{color:var(--text);background:rgba(255,255,255,.05)}
   .iconbtn.on{color:var(--accent)}
-  .spacer{margin-left:auto}
 
   /* ---------- topic picker ---------- */
   .picker{animation:fade .35s var(--ease)}
@@ -245,12 +355,16 @@
 
   @media (prefers-reduced-motion:reduce){
     html{scroll-behavior:auto}
+    #splash img,#splash::before,.tab-pill,.wrap{transition:opacity .3s linear!important;
+      transform:none!important;filter:none!important}
     .art,.mini,.ep,.card{transition:none!important;animation:none!important}
     .ep{opacity:1;transform:none}
   }
 </style>
 </head>
 <body>
+
+<div id="splash" aria-hidden="true"><img id="splashImg" src="splash.webp" alt="" width="1100" height="594"></div>
 
 <div id="glow"></div>
 
@@ -267,7 +381,7 @@
 <div class="wrap">
   <div class="topbar">
     <div class="mark"></div>
-    <span class="wordmark" id="showTitle">The Morning Brief</span>
+    <span class="wordmark" id="showTitle">What's Up?</span>
     <button class="iconbtn spacer" id="edit" aria-label="Edit topics" title="Edit topics"
             style="display:none">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -285,9 +399,16 @@
     </button>
   </div>
 
-  <div id="app"><div class="state">Loading…</div></div>
+  <div class="tabs" role="tablist">
+    <button class="tab on" data-tab="news" role="tab" aria-selected="true">News</button>
+    <button class="tab" data-tab="day" role="tab" aria-selected="false">My Day</button>
+    <i class="tab-pill"></i>
+  </div>
 
-  <footer>
+  <div id="app"><div class="state">Loading…</div></div>
+  <div id="day"></div>
+
+  <footer id="newsFoot">
     <span id="stamp"></span><br>
     <a id="feedLink" href="feed.xml">Subscribe in a podcast app →</a>
   </footer>
@@ -306,10 +427,41 @@
 </div>
 
 <audio id="audio" preload="metadata"></audio>
+<audio id="dayAudio" preload="auto"></audio>
 
 <script>
 (function(){
   "use strict";
+
+  /* The intro. The lettering eases in, holds for a beat, and lifts away as
+     the app rises underneath it -- about 1.7 seconds door to door. It starts
+     when the image has actually loaded, so nobody watches an empty screen,
+     and it gives up quickly if the image never arrives. */
+  (function(){
+    var sp = document.getElementById('splash');
+    if (!sp) { document.body.classList.add('revealed'); return; }
+    var img = document.getElementById('splashImg'), gone = false, began = false;
+    function leave(){
+      if (gone) return; gone = true;
+      sp.classList.add('out');
+      document.body.classList.add('revealed');
+      setTimeout(function(){ if (sp.parentNode) sp.parentNode.removeChild(sp); }, 620);
+    }
+    function begin(){
+      if (began || gone) return; began = true;
+      // next frame, so the starting styles are painted before they change
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        sp.classList.add('in');
+        setTimeout(leave, 1250);
+      }); });
+    }
+    if (img.complete && img.naturalWidth) begin();
+    else {
+      img.addEventListener('load', begin, {once:true});
+      img.addEventListener('error', leave, {once:true});
+      setTimeout(function(){ if (!began) leave(); }, 900);
+    }
+  })();
 
   var audio = document.getElementById('audio');
   var app   = document.getElementById('app');
@@ -441,10 +593,19 @@
           '<span class="tick">'+I_TICK+'</span></button>';
       }).join('');
     }
+    // The real length of what they have picked, added up from today's actual
+    // audio. This used to be an estimate (topics x 45 seconds) and it was
+    // wrong by half a minute; the files know how long they are.
     function note(){
       if (!sel.length) return 'Pick up to ' + MAXSEL + '.';
-      if (sel.length === 1) return 'One topic — you get the full three-minute version.';
-      return sel.length + ' topics · about ' + Math.round(sel.length * 0.75) + ' minutes';
+      var segs = segsFor(day), secs = 0, solo = sel.length === 1;
+      sel.forEach(function(slug){
+        var g = segs[slug]; if (!g) return;
+        var c = solo ? (g.long || g.short) : (g.short || g.long);
+        secs += (c && c.duration) || 0;
+      });
+      if (solo) return 'One topic · the full version, ' + fmt(secs);
+      return sel.length + ' topics · ' + fmt(secs) + ' today';
     }
 
     app.innerHTML =
@@ -753,7 +914,7 @@
     try {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: q.solo ? q.seg.title : (q.label + ' — ' + q.seg.title),
-        artist: data.show || 'The Morning Brief',
+        artist: data.show || "What's Up?",
         album: longDate(day.date),
         artwork: [{ src: new URL(coverOf(lead), location.href).href,
                     sizes:'1024x1024', type:'image/png' }]
@@ -848,7 +1009,7 @@
     }
   });
 
-  audio.addEventListener('play', function(){ syncPlay(); renderChapters(); });
+  audio.addEventListener('play', function(){ dayAudio.pause(); syncPlay(); renderChapters(); });
   audio.addEventListener('pause', syncPlay);
 
   document.addEventListener('keydown', function(e){
@@ -944,6 +1105,314 @@
       });
   };
 
+  // ---------- tabs ----------
+  var dayBox = document.getElementById('day');
+  var dayAudio = document.getElementById('dayAudio');
+  var tab = 'news';
+  function setTab(name){
+    tab = name === 'day' ? 'day' : 'news';
+    document.body.setAttribute('data-tab', tab);
+    [].forEach.call(document.querySelectorAll('.tab'), function(b){
+      var on = b.dataset.tab === tab;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    window.scrollTo({top:0});
+    if (tab === 'day' && !dayState.doc) loadDay();
+  }
+  [].forEach.call(document.querySelectorAll('.tab'), function(b){
+    b.onclick = function(){ setTab(b.dataset.tab); };
+  });
+
+  /* ---------- My Day ----------
+     The plan is published encrypted, because this site is public and a
+     calendar is not. Everything below happens on this device: the key lives
+     in this browser's storage, the files are decrypted here with the
+     browser's own crypto, and nothing readable is ever sent anywhere. */
+  var dayState = { index:null, doc:null, key:null, audioUrl:null, audioWanted:false };
+  var I_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>';
+
+  function u8ToB64u(u8){
+    var bin = ''; for (var i=0;i<u8.length;i++) bin += String.fromCharCode(u8[i]);
+    return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+  function importDayKey(text){
+    var raw;
+    try { raw = b64ToU8(String(text||'').trim()); } catch(e){ return Promise.reject(new Error('format')); }
+    if (raw.length !== 32) return Promise.reject(new Error('format'));
+    return crypto.subtle.importKey('raw', raw, {name:'AES-GCM'}, false, ['decrypt']);
+  }
+  // Layout matches myday.py: 12-byte nonce, then ciphertext and tag. The date
+  // and role are bound in, so a stale or swapped file refuses to open.
+  function openSealed(key, buf, date, kind){
+    var u8 = new Uint8Array(buf);
+    return crypto.subtle.decrypt({
+      name:'AES-GCM', iv:u8.slice(0,12),
+      additionalData:new TextEncoder().encode('whatsup-myday-v1|' + date + '|' + kind)
+    }, key, u8.slice(12));
+  }
+
+  function loadDay(){
+    dayBox.innerHTML = '<div class="state">Loading…</div>';
+    if (!window.crypto || !crypto.subtle) {
+      dayBox.innerHTML = '<div class="state">This browser can’t unlock My Day.<br>Open the app over https in Safari or Chrome.</div>';
+      return;
+    }
+    fetch('myday/index.json?t=' + Date.now())
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .catch(function(){ return null; })
+      .then(function(idx){
+        dayState.index = idx;
+        var saved = store.get('dayKey');
+        if (!idx) return renderDaySetup(!!saved);
+        if (!saved) return renderDayLocked('');
+        unlockDay(saved, true);
+      });
+  }
+
+  function unlockDay(keyText, wasSaved){
+    var idx = dayState.index;
+    importDayKey(keyText).then(function(key){
+      return fetch(idx.plan + '?t=' + Date.now())
+        .then(function(r){ if (!r.ok) throw new Error('missing'); return r.arrayBuffer(); })
+        .then(function(buf){ return openSealed(key, buf, idx.date, 'plan'); })
+        .then(function(plain){
+          dayState.key = key;
+          dayState.doc = JSON.parse(new TextDecoder().decode(plain));
+          store.set('dayKey', String(keyText).trim());
+          renderDay();
+          prepareDayAudio();
+        });
+    }).catch(function(err){
+      var why = (err && err.message === 'format')
+        ? 'That doesn’t look like a key. It is 43 letters, numbers, dashes and underscores.'
+        : (err && err.message === 'missing')
+          ? 'Couldn’t download today’s plan. Check your connection and try again.'
+          : wasSaved
+            ? 'The key saved on this device no longer opens the plan. Paste the current one.'
+            : 'That key doesn’t open the plan. Check it matches the MYDAY_KEY secret exactly.';
+      renderDayLocked(why);
+    });
+  }
+
+  function newDayKey(){
+    var raw = new Uint8Array(32);
+    crypto.getRandomValues(raw);
+    var text = u8ToB64u(raw);
+    store.set('dayKey', text);
+    return text;
+  }
+  function showKeySheet(text, fresh){
+    openSheet(fresh ? 'Your key' : 'Your key, for another device',
+      fresh
+        ? 'This key is now saved on this device. Copy it and save it as a repository secret named MYDAY_KEY. Treat it like a password: anyone holding it can read your plan.'
+        : 'Paste this into the My Day tab on your other device. Treat it like a password.',
+      'Copy', function(){
+        var ta = document.getElementById('sheetSub');
+        ta.select();
+        navigator.clipboard.writeText(ta.value).then(function(){
+          document.getElementById('sheetAction').textContent = 'Copied';
+        }).catch(function(){});
+      }, text);
+  }
+
+  // Nothing has been published yet: walk the owner through turning it on.
+  function renderDaySetup(hasKey){
+    dayBox.innerHTML =
+      '<div class="lock">' +
+        '<div class="lock-ico">' + I_LOCK + '</div>' +
+        '<h2>My Day</h2>' +
+        '<p>Your calendar for the day, with a note on what to prepare for each meeting. ' +
+        'It is private: published encrypted and unlocked only on your devices.</p>' +
+        (hasKey
+          ? '<p>Your key is saved on this device. The plan appears after the next morning build, ' +
+            'once both secrets below are in place.</p>'
+          : '') +
+        '<ol>' +
+          '<li>' + (hasKey ? 'Key created. ' : 'Create your key below, then ') +
+            'save it as a repository secret named <code>MYDAY_KEY</code>.</li>' +
+          '<li>In Google Calendar settings, copy your calendar’s <b>secret address in iCal format</b> ' +
+            'and save it as a secret named <code>CALENDAR_ICS_URL</code>.</li>' +
+          '<li>Run the workflow. Your day appears here.</li>' +
+        '</ol>' +
+        '<button class="cta" id="dayMake">' + (hasKey ? 'Show my key again' : 'Create my key') + '</button>' +
+        '<div><button class="lock-alt" id="dayHave">I already have a key</button></div>' +
+      '</div>';
+    document.getElementById('dayMake').onclick = function(){
+      var existing = store.get('dayKey');
+      if (existing) return showKeySheet(existing, true);
+      var text = newDayKey();
+      renderDaySetup(true);
+      showKeySheet(text, true);
+    };
+    document.getElementById('dayHave').onclick = function(){ renderDayLocked(''); };
+  }
+
+  // A plan exists but this device has no working key.
+  function renderDayLocked(message){
+    dayBox.innerHTML =
+      '<div class="lock">' +
+        '<div class="lock-ico">' + I_LOCK + '</div>' +
+        '<h2>My Day is locked</h2>' +
+        '<p>This tab is private to the owner of the calendar. Paste your key to unlock it on this device. ' +
+        'You only do this once.</p>' +
+        '<input id="dayKeyIn" type="password" autocomplete="off" autocapitalize="off" ' +
+          'autocorrect="off" spellcheck="false" placeholder="Paste your key" aria-label="Key">' +
+        '<div class="lock-err" id="dayErr">' + esc(message || '') + '</div>' +
+        '<button class="cta" id="dayUnlock">Unlock</button>' +
+      '</div>';
+    var input = document.getElementById('dayKeyIn');
+    function go(){
+      var v = input.value.trim();
+      if (!v) return;
+      if (!dayState.index) {            // setup not finished: just keep the key
+        store.set('dayKey', v); renderDaySetup(true); return;
+      }
+      document.getElementById('dayErr').textContent = '';
+      unlockDay(v, false);
+    }
+    document.getElementById('dayUnlock').onclick = go;
+    input.addEventListener('keydown', function(e){ if (e.key === 'Enter') go(); });
+  }
+
+  function dayClock(iso, tz){
+    try {
+      return new Date(iso).toLocaleTimeString(undefined,
+        {hour:'numeric', minute:'2-digit', timeZone:tz});
+    } catch(e){
+      return new Date(iso).toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'});
+    }
+  }
+  function todayIn(tz){
+    try { return new Date().toLocaleDateString('en-CA', {timeZone:tz}); }
+    catch(e){ return new Date().toLocaleDateString('en-CA'); }
+  }
+
+  function renderDay(){
+    var doc = dayState.doc, tz = doc.tz, now = Date.now();
+    var isToday = doc.date === todayIn(tz);
+    var nextMarked = false;
+
+    var events = (doc.events || []).map(function(ev){
+      var start = new Date(ev.start).getTime(), end = new Date(ev.end).getTime();
+      var past = isToday && !ev.all_day && end < now;
+      var live = isToday && !ev.all_day && start <= now && end >= now;
+      var next = isToday && !ev.all_day && !nextMarked && start > now;
+      if (next) nextMarked = true;
+
+      var meta = [];
+      if (ev.location) meta.push(esc(ev.location));
+      else if (ev.online) meta.push('Video call');
+      if (ev.who && ev.who.length) {
+        var more = (ev.who_count || ev.who.length) - ev.who.length;
+        meta.push('with ' + esc(ev.who.slice(0,3).join(', ')) +
+          ((ev.who.length > 3 || more > 0)
+            ? ' +' + ((ev.who_count || ev.who.length) - Math.min(3, ev.who.length)) : ''));
+      }
+      var prep = ev.prep
+        ? '<div class="ev-prep' + (ev.priority === 'high' ? ' high' : '') + '">' +
+            (ev.priority === 'high' ? '<b>Prepare</b>' : '') + esc(ev.prep) + '</div>'
+        : '';
+      return '<div class="ev' + (past ? ' past' : '') + '">' +
+        '<div class="ev-time">' + (ev.all_day ? 'All day'
+          : esc(dayClock(ev.start, tz)) + '<small>' + esc(dayClock(ev.end, tz)) + '</small>') + '</div>' +
+        '<div><div class="ev-title">' + esc(ev.title) +
+          (live ? '<span class="ev-badge">Now</span>' : next ? '<span class="ev-badge">Next</span>' : '') +
+        '</div>' +
+        (meta.length ? '<div class="ev-meta">' + meta.join(' · ') + '</div>' : '') + prep +
+        '</div></div>';
+    }).join('');
+
+    var heads = (doc.heads_up || []).map(function(h){ return '<li>' + esc(h) + '</li>'; }).join('');
+    var tomorrow = (doc.tomorrow || []).map(function(ev){
+      return '<div class="tom"><span>' + (ev.all_day ? 'All day' : esc(dayClock(ev.start, tz))) +
+        '</span><span>' + esc(ev.title) + '</span></div>';
+    }).join('');
+    var hasAudio = !!(dayState.index && dayState.index.audio);
+
+    dayBox.innerHTML =
+      '<div class="day-date">' + esc(longDate(doc.date)) + '</div>' +
+      (isToday ? '' : '<div class="day-stale">This is the plan from ' + esc(longDate(doc.date)) +
+        '. Today’s hasn’t been built yet.</div>') +
+      '<p class="day-over">' + esc(doc.overview || '') + '</p>' +
+      (hasAudio
+        ? '<button class="rundown" id="rundown">' +
+            '<span class="rundown-btn" id="rundownIco">' + I_PLAY + '</span>' +
+            '<span class="rundown-main"><span class="rundown-label">Listen to your day</span>' +
+            '<span class="rundown-sub" id="rundownSub">' + fmt(doc.audio_seconds || 0) + '</span></span>' +
+            '<span class="rundown-bar" id="rundownBar"></span></button>'
+        : '') +
+      (heads ? '<ul class="heads">' + heads + '</ul>' : '') +
+      (events
+        ? '<div class="sec-head"><span>Today</span><i></i></div>' + events
+        : '') +
+      (tomorrow ? '<div class="sec-head"><span>Tomorrow</span><i></i></div>' + tomorrow : '') +
+      '<div class="day-foot">Private. Decrypted on this device only.<br>' +
+        '<button id="dayShowKey">Show my key</button> &nbsp;·&nbsp; ' +
+        '<button id="dayLock">Lock this device</button></div>';
+
+    var rd = document.getElementById('rundown');
+    if (rd) rd.onclick = toggleDayAudio;
+    document.getElementById('dayShowKey').onclick = function(){
+      showKeySheet(store.get('dayKey') || '', false);
+    };
+    document.getElementById('dayLock').onclick = function(){
+      openSheet('Lock this device?',
+        'This removes the key from this device. You will need to paste it again to see My Day here.',
+        'Lock', function(){
+          dayAudio.pause();
+          try { localStorage.removeItem('dayKey'); } catch(e){}
+          dayState.doc = null; dayState.key = null;
+          sheet.classList.remove('open');
+          renderDayLocked('');
+        });
+    };
+    syncDayAudio();
+  }
+
+  /* Decrypt the rundown as soon as the plan opens, not when play is tapped.
+     iOS only lets audio start inside the tap itself; a download and a
+     decryption between the tap and play() would be refused as autoplay. With
+     the audio already sitting in memory, the tap can start it at once. */
+  function prepareDayAudio(){
+    var idx = dayState.index;
+    if (!idx || !idx.audio || dayState.audioUrl) return;
+    fetch(idx.audio + '?t=' + Date.now())
+      .then(function(r){ if (!r.ok) throw new Error('missing'); return r.arrayBuffer(); })
+      .then(function(buf){ return openSealed(dayState.key, buf, idx.date, 'audio'); })
+      .then(function(plain){
+        dayState.audioUrl = URL.createObjectURL(new Blob([plain], {type:'audio/mpeg'}));
+        dayAudio.src = dayState.audioUrl;
+        if (dayState.audioWanted) { dayState.audioWanted = false; dayAudio.play().catch(function(){}); }
+      })
+      .catch(function(){
+        var sub = document.getElementById('rundownSub');
+        if (sub) sub.textContent = 'Audio unavailable today';
+        var rd = document.getElementById('rundown');
+        if (rd) rd.disabled = true;
+      });
+  }
+  function toggleDayAudio(){
+    if (!dayState.audioUrl) { dayState.audioWanted = true; return; }
+    dayAudio.paused ? dayAudio.play().catch(function(){}) : dayAudio.pause();
+  }
+  function syncDayAudio(){
+    var ico = document.getElementById('rundownIco');
+    if (ico) ico.innerHTML = dayAudio.paused ? I_PLAY : I_PAUSE;
+  }
+  dayAudio.addEventListener('play', function(){ audio.pause(); syncDayAudio(); });
+  dayAudio.addEventListener('pause', syncDayAudio);
+  dayAudio.addEventListener('ended', function(){
+    syncDayAudio();
+    var bar = document.getElementById('rundownBar'); if (bar) bar.style.width = '0%';
+  });
+  dayAudio.addEventListener('timeupdate', function(){
+    var total = (dayState.doc && dayState.doc.audio_seconds) || dayAudio.duration || 0;
+    var bar = document.getElementById('rundownBar'), sub = document.getElementById('rundownSub');
+    if (bar && total) bar.style.width = Math.min(100, dayAudio.currentTime / total * 100) + '%';
+    if (sub && total) sub.textContent = fmt(dayAudio.currentTime) + ' / ' + fmt(total);
+  });
+
   // ---------- boot ----------
   var savedSpeed = Number(store.get('speed') || 1);
   if (SPEEDS.indexOf(savedSpeed) !== -1) speed = savedSpeed;
@@ -967,7 +1436,7 @@
       }
 
       MAXSEL = data.maxSelection || 4;
-      var name = data.show || 'The Morning Brief';
+      var name = data.show || "What's Up?";
       document.getElementById('showTitle').textContent = name;
       document.title = name;
       document.getElementById('stamp').textContent =
@@ -975,6 +1444,7 @@
           {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
 
       var params = new URLSearchParams(location.search);
+      if (params.get('tab') === 'day' && !params.get('episode')) setTab('day');
 
       // ?episode=YYYY-MM-DD lets a notification open straight to its day
       var want = params.get('episode');

@@ -24,8 +24,8 @@
 // Bump this whenever you change anything in web/. The old cache is dropped on
 // activate, so a version bump is what makes a UI change actually reach the
 // phone instead of sitting behind a cached index.html.
-const VERSION = 'brief-v7';
-const SHELL = ['./', './index.html', './manifest.webmanifest',
+const VERSION = 'brief-v8';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './splash.webp',
                './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -58,8 +58,10 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.includes('/audio/') || req.headers.has('range')) return;
 
   // Network first for the episode index, so a new brief appears the moment
-  // it is published.
-  if (url.pathname.endsWith('episodes.json')) {
+  // it is published -- and for the My Day files, which are replaced under
+  // the same names every morning. Cache-first there would hand the app
+  // yesterday's plan, which then fails to decrypt against today's date.
+  if (url.pathname.endsWith('episodes.json') || url.pathname.includes('/myday/')) {
     event.respondWith(
       fetch(req)
         .then((res) => {
@@ -103,7 +105,7 @@ self.addEventListener('push', (event) => {
   let payload = {};
   try { payload = event.data ? event.data.json() : {}; } catch (e) { /* keep {} */ }
 
-  const title = payload.title || 'The Morning Brief';
+  const title = payload.title || "What's Up?";
   const body = payload.body || 'Today\'s brief is ready.';
   const date = payload.date || '';
 

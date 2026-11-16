@@ -21,6 +21,7 @@ anything about path 1 is uncertain.
 from __future__ import annotations
 
 import html
+import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -167,7 +168,7 @@ def generate_cover(path: Path, topic, date_str: str,
     S = 1024
     snapshot = snapshot or {}
     is_markets = bool(getattr(topic, "needs_market_data", False))
-    label = getattr(topic, "label", "The Morning Brief")
+    label = getattr(topic, "label", "What's Up?")
 
     spx = next((q for q in snapshot.get("us_indices", [])
                 if q["symbol"] == "^GSPC"), None) if is_markets else None
@@ -189,7 +190,8 @@ def generate_cover(path: Path, topic, date_str: str,
                   fill=tuple(round(8 + (glow[c] - 8) * (1 - t) * 0.5) for c in range(3)))
 
     pad = 84
-    d.text((pad, pad), "THE MORNING BRIEF", font=_font(28), fill=accent)
+    show = (os.getenv("SHOW_TITLE") or "What's Up?").upper()
+    d.text((pad, pad), show, font=_font(28), fill=accent)
     nice_date = datetime.strptime(date_str, "%Y-%m-%d").strftime("%a %-d %b").upper()
     d.text((pad, pad + 42), nice_date, font=_font(24, False), fill=(138, 143, 152))
 

@@ -27,7 +27,7 @@ The listener picks their topics. If they picked **{LABEL}** on its own, they
 hear the long version. If they picked it alongside other topics, the short cut
 is stitched into one continuous brief with the others.
 
-## `script_long` — 420 to 480 words. Never more than 500.
+## `script_long` — 400 to 450 words. Never more than 460.
 
 About three minutes. Three minutes is the whole point: this is a brief, not a
 show. Going long is the most common way to get this wrong, and a 700-word
@@ -41,9 +41,11 @@ one" or "moving on" — the listener should feel a running order, not hear one.
 Running order for the long version:
 {LONG_ORDER}
 
-## `script_short` — 100 to 125 words. Never more than 135.
+## `script_short` — 90 to 105 words. Never more than 110.
 
-About forty-five seconds. This is not a summary of the long version written
+About forty seconds, and it is cut off hard at forty-five. Count the words
+before you publish: every word past 110 is a word the listener hears sped up.
+This is not a summary of the long version written
 afterwards — it is the same reporting at a different length. It has to stand
 alone, because for most listeners it is the only {LABEL} they will hear.
 

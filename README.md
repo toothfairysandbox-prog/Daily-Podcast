@@ -1,4 +1,4 @@
-# The Morning Brief
+# What's Up?
 
 A daily podcast that builds itself, and that each listener builds for
 themselves. Every weekday morning GitHub pulls the overnight news and market
@@ -56,6 +56,16 @@ four.
 Both cuts come from a single model call per topic, so six topics cost six
 calls rather than twelve.
 
+### Holding the three-minute cap
+
+The word limits in `segment_prompt.md` are sized for the voice's measured
+pace of about 152 words a minute. They are still only a request, so the build
+enforces the cap as well: `tts.fit_duration` speeds any cut that runs over
+its limit (45 seconds short, 180 long) just enough to fit, pitch preserved
+and capped at 1.15x. A cut needing more than that is reported in the log,
+because the script is too long. The picker shows the real total of what you
+have selected, added up from the day's actual audio.
+
 ### Adding or removing a topic
 
 Edit `topics.py`. One `Topic` entry is the whole configuration surface:
@@ -77,6 +87,45 @@ To find out which feed died, run the workflow with **check_feeds** ticked.
 That fetches every feed and prints what came back. Do it on the runner —
 a laptop behind a corporate proxy, or any sandbox, will report every feed
 dead and tell you nothing.
+
+---
+
+## My Day
+
+A second tab with your calendar for the day: a short overview, each meeting
+with a note on what to prepare, and a spoken rundown of about forty seconds.
+
+**It is private, on a public site.** The plan and its audio are encrypted
+(AES-256-GCM) before they are published. The key lives in a repository
+secret and on your own devices. Anyone else opening the tab sees a lock. The
+build log is public too, so `myday.py` prints nothing about your calendar:
+no titles, no names, no counts, and errors by type only.
+
+It is a snapshot from the morning build. A meeting moved at noon will not
+update until the next build.
+
+Where your calendar text goes: to Claude, through your own API key, to write
+the plan; and the spoken rundown's script to Microsoft's speech service, the
+same one that voices the news. Nowhere else.
+
+### Turning it on
+
+1. Open the app, tap **My Day**, tap **Create my key**, and copy it.
+2. In the repo: Settings -> Secrets and variables -> Actions -> **Secrets** ->
+   New repository secret, named `MYDAY_KEY`, value the key.
+3. In Google Calendar on a computer: Settings -> click your calendar under
+   "Settings for my calendars" -> Integrate calendar -> copy **Secret address
+   in iCal format**. Save it as a second secret named `CALENDAR_ICS_URL`.
+   This address is a password: anyone holding it can read your calendar.
+   Never paste it anywhere but that secret box.
+4. Run the workflow. The plan appears in the tab.
+
+Optional repository **variables**: `MYDAY_TZ` (default `America/Denver`) and
+`MYDAY_EMAIL` (your address, so meetings you declined are left out).
+
+To open it on another device, use **Show my key** at the bottom of the tab
+and paste the key there. To revoke everything, replace `MYDAY_KEY` with a new
+key; in Google Calendar, "Reset" the secret address.
 
 ---
 
@@ -366,6 +415,8 @@ number handed to Claude comes from Stooq's daily close — which means the
 
 ```
 topics.py                       the topic menu ← add or remove topics here
+myday.py                        the encrypted calendar tab
+myday_prompt.md                 how the day plan is written
 build.py                        orchestrates one day, all topics, both lengths
 sources.py                      RSS fetching + market data
 cover.py                        news photo or designed cover, per topic

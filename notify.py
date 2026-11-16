@@ -70,7 +70,7 @@ def main() -> int:
     subs = parsed if isinstance(parsed, list) else [parsed]
 
     payload = json.dumps({
-        "title": "The Morning Brief",
+        "title": os.getenv("SHOW_TITLE", "").strip() or "What's Up?",
         "body": args.body or args.title,
         "date": args.date,
         "image": args.image or None,
