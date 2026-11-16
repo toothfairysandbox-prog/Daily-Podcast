@@ -110,6 +110,14 @@ def merge_entries(
             if added >= per_feed:
                 break
             title = (getattr(entry, "title", "") or "").strip()
+            # Nature puts markup in its titles ("<b>The climate is in </b>..."),
+            # which would show as literal tags in the Sources panel.
+            if "<" in title:
+                import html
+                import re
+
+                title = html.unescape(re.sub(r"<[^>]+>", "", title))
+                title = " ".join(title.split())
             if not title:
                 continue
             key = title.lower()[:90]

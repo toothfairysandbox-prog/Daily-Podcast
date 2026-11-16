@@ -64,10 +64,8 @@ MARKETS = Topic(
         ("CNBC Markets", "https://www.cnbc.com/id/20910258/device/rss/rss.html"),
         ("CNBC Top News", "https://www.cnbc.com/id/100003114/device/rss/rss.html"),
         ("MarketWatch", "https://feeds.content.dowjones.io/public/rss/mw_topstories"),
-        # finance.yahoo.com/news/rssindex started 404ing; the per-symbol
-        # headline feed still works and carries broad market news.
-        ("Yahoo Finance",
-         "https://feeds.finance.yahoo.com/rss/2.0/headline?s=%5EGSPC&region=US&lang=en-US"),
+        # Yahoo Finance removed 2026-11-16: HTTP 429 from GitHub runners on
+        # every check, the same IP throttle that blocks Yahoo's price API.
         ("Federal Reserve", "https://www.federalreserve.gov/feeds/press_all.xml"),
         ("Investing.com", "https://www.investing.com/rss/news_25.rss"),
         ("Seeking Alpha", "https://seekingalpha.com/market_currents.xml"),
@@ -142,7 +140,7 @@ AI_TECH = Topic(
         ("The Verge", "https://www.theverge.com/rss/index.xml"),
         ("TechCrunch", "https://techcrunch.com/feed/"),
         ("MIT Technology Review", "https://www.technologyreview.com/feed/"),
-        ("VentureBeat AI", "https://venturebeat.com/category/ai/feed/"),
+        # VentureBeat removed 2026-11-16: HTTP 429 from GitHub runners.
         ("Wired", "https://www.wired.com/feed/rss"),
         ("Hacker News", "https://hnrss.org/frontpage"),
     ],
@@ -189,9 +187,12 @@ SPORTS = Topic(
     icon="ball",
     accent=(72, 199, 142),
     feeds=[
-        ("ESPN", "https://www.espn.com/espn/rss/news"),
-        ("ESPN NFL", "https://www.espn.com/espn/rss/nfl/news"),
-        ("ESPN NBA", "https://www.espn.com/espn/rss/nba/news"),
+        # ESPN removed 2026-11-16: all three feeds answer the runner with
+        # zero entries, and none was cited on any day sports ran. BBC and Sky
+        # lean British, so the Yahoo league feeds below keep US sport covered.
+        # They are unverified until the next check_feeds run.
+        ("Yahoo NFL", "https://sports.yahoo.com/nfl/rss/"),
+        ("Yahoo NBA", "https://sports.yahoo.com/nba/rss/"),
         ("BBC Sport", "https://feeds.bbci.co.uk/sport/rss.xml"),
         ("CBS Sports", "https://www.cbssports.com/rss/headlines/"),
         ("Yahoo Sports", "https://sports.yahoo.com/rss/"),
