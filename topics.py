@@ -74,8 +74,8 @@ MARKETS = Topic(
 **1. What happened. (30-45 seconds, ~85-125 words)**
 The major events. Fed decisions and Fed speakers, geopolitics, wars and
 ceasefires, elections, regulation, big corporate news. Lead with the single
-most important one -- no greeting before it, say good morning after the first
-beat. Two or three events, with what each actually changes. If it was a quiet
+most important one, with no greeting: the brief has already said good
+morning. Two or three events, with what each actually changes. If it was a quiet
 news day, say so and move on rather than inflating something minor.
 
 **2. The index scoreboard. (20-30 seconds, ~55-85 words)**

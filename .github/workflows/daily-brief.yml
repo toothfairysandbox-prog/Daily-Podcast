@@ -49,8 +49,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Six topics at two lengths is twelve speech passes and six model calls.
-    # They run in parallel and land in roughly four minutes, but the ceiling
+    # Six topics at four lengths is twenty-four speech passes and six model
+    # calls. They run in parallel and land in about six minutes, but the ceiling
     # has to leave room for a slow morning.
     timeout-minutes: 30
 
@@ -89,6 +89,8 @@ jobs:
       - name: Check feed health
         if: inputs.check_feeds == true
         timeout-minutes: 6
+        env:
+          WEATHER_PLACES: ${{ vars.WEATHER_PLACES }}
         run: python build.py --check-feeds
 
       - name: Build today's brief
@@ -105,7 +107,12 @@ jobs:
           TTS_VOICE:         ${{ vars.TTS_VOICE         || 'en-US-AndrewMultilingualNeural' }}
           SHOW_TITLE:        ${{ vars.SHOW_TITLE        || 'What''s Up?' }}
           SHOW_AUTHOR:       ${{ vars.SHOW_AUTHOR       || 'What''s Up?' }}
-          RETAIN_EPISODES:   ${{ vars.RETAIN_EPISODES   || '30' }}
+          # Fourteen days, not thirty: every topic is now recorded at four
+          # lengths in full quality, about 14 MB a day.
+          RETAIN_EPISODES:   ${{ vars.RETAIN_EPISODES   || '14' }}
+          # Optional override for weather_places.txt, e.g.
+          # "Denver, Colorado; Boise, Idaho".
+          WEATHER_PLACES:    ${{ vars.WEATHER_PLACES }}
           VAPID_PUBLIC_KEY:  ${{ vars.VAPID_PUBLIC_KEY }}
           # My Day. Both are secrets: the calendar address is itself the
           # credential (anyone holding it can read the calendar), and the

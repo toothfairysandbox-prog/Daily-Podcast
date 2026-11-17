@@ -127,7 +127,7 @@
   .ev-prep b{display:block;font-size:9.5px;font-weight:700;letter-spacing:.08em;
     text-transform:uppercase;color:var(--accent);margin-bottom:3px}
   .tom{display:flex;gap:12px;padding:8px 0;font-size:13.5px;color:#c3c8d1}
-  .tom span:first-child{width:68px;flex:none;color:var(--dim);font-variant-numeric:tabular-nums}
+  .tom span:first-child{width:88px;flex:none;color:var(--dim);font-variant-numeric:tabular-nums}
   .day-foot{margin-top:30px;text-align:center;font-size:12px;color:var(--dim);line-height:1.9}
   .day-foot button{color:var(--muted);border-bottom:1px solid var(--line);font-size:12px}
   .lock{text-align:center;padding:34px 6px 10px}
@@ -200,6 +200,64 @@
   .cta[disabled]{opacity:.3;cursor:default}
   .cta:not([disabled]):active{transform:scale(.985)}
   .picker-note{text-align:center;font-size:12px;color:var(--dim);margin-top:9px}
+
+  /* ---------- setup ---------- */
+  .setup.in{animation:fade .35s var(--ease)}
+  .setup.fwd{animation:stepFwd .34s var(--ease)}
+  .setup.back{animation:stepBack .34s var(--ease)}
+  @keyframes stepFwd{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+  @keyframes stepBack{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+  .steps{display:flex;align-items:center;gap:6px;margin:2px 0 20px}
+  .steps i{flex:1;height:3px;border-radius:99px;background:rgba(255,255,255,.1);
+    transition:background .3s var(--ease)}
+  .steps i.on{background:var(--accent)}
+  .steps-x{margin-left:10px;font-size:12.5px;font-weight:500;color:var(--muted)}
+  .opts{display:grid;gap:10px}
+  .opt{display:flex;gap:13px;align-items:flex-start;padding:15px;border-radius:15px;
+    border:1px solid var(--line);background:rgba(255,255,255,.018)}
+  .opt.off .card-ico,.opt.off .card-label,.opt.off .card-blurb{opacity:.5}
+  .opt-status{display:block;font-size:12px;line-height:1.45;color:#a9a0f7;margin-top:6px}
+  .opt-status:empty{display:none}
+  .switch{position:relative;width:46px;height:28px;border-radius:99px;flex:none;margin-top:3px;
+    background:rgba(255,255,255,.13);transition:background .22s var(--ease)}
+  .switch i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:transform .22s var(--ease)}
+  .switch.on{background:var(--accent)}
+  .switch.on i{transform:translateX(18px)}
+  .switch[disabled]{opacity:.45;cursor:default}
+  .cta-row{display:flex;gap:10px}
+  .cta-row .cta{flex:1}
+  .cta.ghost{flex:0 0 32%;background:transparent;color:var(--text);
+    border:1px solid var(--line-hi)}
+  .len{padding:6px 0 2px}
+  .len-read{display:flex;flex-direction:column-reverse;align-items:center;
+    font-size:60px;line-height:1.05;font-weight:650;letter-spacing:-.045em;
+    font-variant-numeric:tabular-nums;margin-bottom:14px}
+  .len-read small{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:2px}
+  .len-range{height:34px}
+  .len-range::-webkit-slider-thumb{width:24px;height:24px;margin-top:-10px}
+  .len-range::-moz-range-thumb{width:24px;height:24px}
+  .len-ticks{display:flex;justify-content:space-between;font-size:11.5px;color:var(--dim);
+    font-variant-numeric:tabular-nums;margin-top:2px}
+  .pre{display:flex;align-items:center;gap:12px;padding:9px 2px;border-bottom:1px solid var(--line)}
+  .pre-ico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;
+    background:rgba(255,255,255,.055);color:var(--muted)}
+  .pre-ico:empty{background:none}
+  .pre-ico svg{width:14px;height:14px}
+  .pre-label{flex:1;font-size:14px}
+  .pre-dur{font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .pre.total{border-bottom:0;font-weight:600}
+  .pre.total .pre-dur{color:var(--text)}
+
+  /* ---------- weather ---------- */
+  .wx{display:flex;align-items:center;gap:13px;text-align:left;padding:11px 15px;
+    border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);
+    margin:0 0 16px;animation:fade .4s var(--ease)}
+  .wx-now{font-size:27px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .wx-main{flex:1;min-width:0}
+  .wx-cond{display:block;font-size:13.5px;font-weight:500}
+  .wx-later{display:block;font-size:12px;color:var(--dim);margin-top:1px}
 
   /* ---------- now playing ---------- */
   .np{text-align:center;padding-top:4px}
@@ -469,17 +527,45 @@
 
   var data = null;         // episodes.json
   var dayIdx = 0;          // which day is loaded
-  var picked = [];         // chosen topic slugs
-  var queue = [];          // the stitched playthrough: one entry per segment
+  var queue = [];          // the stitched playthrough: one entry per chapter
   var qi = 0;              // index into queue
   var speed = 1, openPanel = null, vapidKey = null, seeking = false;
   var SPEEDS = [1, 1.25, 1.5, 1.75, 2];
-  var MAXSEL = 4;
+  var LENGTHS = { min:120, max:300, step:30, 'default':180 };
 
   var store = {
     get: function(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
     set: function(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
   };
+
+  /* What this listener asked for. Kept on the device: there are no accounts,
+     so the phone is the only place that knows. The shape is deliberately the
+     one a server would store per listener later. */
+  var prefs = { topics:[], date:true, weather:true, dates:true, length:180, done:false };
+  function loadPrefs(){
+    var raw = null;
+    try { raw = JSON.parse(store.get('prefs') || 'null'); } catch(e){}
+    if (raw && typeof raw === 'object') {
+      prefs.topics  = Array.isArray(raw.topics) ? raw.topics.slice() : [];
+      prefs.date    = raw.date !== false;
+      prefs.weather = raw.weather !== false;
+      prefs.dates   = raw.dates !== false;
+      prefs.length  = Number(raw.length) || 180;
+      prefs.done    = !!raw.done;
+      return;
+    }
+    // Someone who set up before the length slider existed: keep their topics
+    // and don't walk them through setup again.
+    var old = [];
+    try { old = JSON.parse(store.get('topics') || '[]') || []; } catch(e){}
+    if (old.length) { prefs.topics = old; prefs.done = true; savePrefs(); }
+  }
+  function savePrefs(){ store.set('prefs', JSON.stringify(prefs)); }
+
+  // Things that arrive after the page has loaded.
+  var here = null;        // {lat, lon, at}: the phone's last known position
+  var liveWx = null;      // on-screen forecast for that exact position
+  var datesClip = null;   // {url, duration, date}: decrypted birthdays reminder
 
   // ---------- icons ----------
   var ICONS = {
@@ -488,7 +574,11 @@
     ball:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M12 3a9 9 0 0 1 0 18M3.6 9h16.8M3.6 15h16.8"/>',
     briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/>',
     globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/>',
-    flask:'<path d="M9 3h6M10 3v6L5 18a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/><path d="M7.5 14h9"/>'
+    flask:'<path d="M9 3h6M10 3v6L5 18a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/><path d="M7.5 14h9"/>',
+    calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    cloud:'<path d="M7 18.5a4.5 4.5 0 0 1-.6-8.96 6 6 0 0 1 11.5 1.5A3.75 3.75 0 0 1 17.5 18.5z"/>',
+    gift:'<rect x="3.5" y="9" width="17" height="11.5" rx="2"/><path d="M3.5 13h17M12 9v11.5M12 9c-1.2-3.4-5-3.6-5-1.2S10.4 9 12 9zm0 0c1.2-3.4 5-3.6 5-1.2S13.6 9 12 9z"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>'
   };
   function icon(name){
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '+
@@ -534,26 +624,241 @@
     return (seg && seg.cover && seg.cover.url) ? seg.cover.url : 'icons/icon-512.png';
   }
 
-  /* Build the playthrough.
-     One topic picked  -> that topic's long cut, the full three minutes.
-     Several picked    -> each topic's 45-second cut, in menu order, stitched.
-     That rule is the whole product decision: breadth costs depth. */
-  function buildQueue(){
-    var day = data.episodes[dayIdx];
-    var segs = segsFor(day);
-    var live = picked.filter(function(s){ return !!segs[s]; });
-    var solo = live.length === 1;
-    queue = [];
-    menu().forEach(function(m){
-      if (live.indexOf(m.slug) === -1) return;
-      var seg = segs[m.slug];
-      var cut = solo ? (seg.long || seg.short) : (seg.short || seg.long);
-      if (!cut || !cut.audio) return;
-      queue.push({
-        slug: m.slug, label: m.label, icon: m.icon, seg: seg, cut: cut,
-        solo: solo, duration: cut.duration || 0
+  /* A topic's recorded lengths, shortest first. Days built before the length
+     slider have only a short and a long cut; they are read the same way, so
+     the archive keeps playing. */
+  function cutsOf(seg){
+    var out = [];
+    if (seg.cuts) {
+      Object.keys(seg.cuts).forEach(function(k){
+        if (seg.cuts[k] && seg.cuts[k].audio) out.push(seg.cuts[k]);
       });
+    } else {
+      if (seg.short && seg.short.audio) out.push(seg.short);
+      if (seg.long && seg.long.audio) out.push(seg.long);
+    }
+    return out.sort(function(a,b){ return (a.duration||0) - (b.duration||0); });
+  }
+
+  /* Share the time out between topics.
+
+     Every topic starts on its shortest cut, so nothing the listener picked is
+     ever dropped. Then, while there is time left, the topic with the most
+     news per second already given is moved up one length. A big day for
+     markets earns the two-minute version; a quiet day for sport stays at the
+     headlines. Equal weights come out as an even split. */
+  function pickCuts(list, budget){
+    var level = list.map(function(){ return 0; });
+    var used = list.reduce(function(a,t){ return a + (t.cuts[0].duration||0); }, 0);
+    for (;;) {
+      var best = -1, bestScore = -1, bestDelta = 0;
+      for (var i=0; i<list.length; i++){
+        var cuts = list[i].cuts;
+        if (level[i] + 1 >= cuts.length) continue;
+        var cur = cuts[level[i]].duration || 1;
+        var delta = (cuts[level[i]+1].duration || 0) - cur;
+        if (used + delta > budget) continue;
+        var score = (list[i].seg.weight == null ? 0.5 : list[i].seg.weight) / cur;
+        if (score > bestScore + 1e-9) { best = i; bestScore = score; bestDelta = delta; }
+      }
+      if (best < 0) break;
+      level[best]++; used += bestDelta;
+    }
+    return level;
+  }
+
+  // ---------- where the listener is ----------
+  function distanceKm(a, b){
+    var R = 6371, rad = Math.PI/180;
+    var dLat = (b.lat-a.lat)*rad, dLon = (b.lon-a.lon)*rad;
+    var h = Math.sin(dLat/2)*Math.sin(dLat/2) +
+            Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+  // The listed town nearest the phone, if any is close enough to be "here".
+  function nearestPlace(day){
+    var wx = day && day.weather;
+    if (!here || !wx || !wx.places || !wx.places.length) return null;
+    var best = null, bestKm = Infinity;
+    wx.places.forEach(function(p){
+      var km = distanceKm(here, p);
+      if (km < bestKm) { best = p; bestKm = km; }
     });
+    return bestKm <= (wx.nearby_km || 60) ? best : null;
+  }
+
+  /* Ask the phone where it is. A recent answer is reused, so opening the app
+     twice in a morning does not ask twice. `done` is called either way. */
+  function locate(done){
+    var saved = null;
+    try { saved = JSON.parse(store.get('here') || 'null'); } catch(e){}
+    if (saved && Date.now() - saved.at < 3*3600*1000) { here = saved; done(true); return; }
+    if (!navigator.geolocation) { done(false); return; }
+    navigator.geolocation.getCurrentPosition(function(pos){
+      here = { lat: pos.coords.latitude, lon: pos.coords.longitude, at: Date.now() };
+      store.set('here', JSON.stringify(here));
+      done(true);
+    }, function(){
+      if (saved) { here = saved; done(true); } else done(false);
+    }, { timeout: 9000, maximumAge: 30*60*1000 });
+  }
+
+  var WMO = {0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Cloudy',45:'Fog',48:'Freezing fog',
+    51:'Light drizzle',53:'Drizzle',55:'Drizzle',56:'Freezing drizzle',57:'Freezing drizzle',
+    61:'Light rain',63:'Rain',65:'Heavy rain',66:'Freezing rain',67:'Freezing rain',
+    71:'Light snow',73:'Snow',75:'Heavy snow',77:'Flurries',80:'Showers',81:'Showers',
+    82:'Heavy showers',85:'Snow showers',86:'Snow showers',95:'Thunderstorms',
+    96:'Thunderstorms',99:'Thunderstorms'};
+  function isSnow(code){ return [71,73,75,77,85,86].indexOf(code) !== -1; }
+
+  /* The on-screen forecast, for the phone's exact position. It is fetched by
+     the phone straight from the weather service, so it works anywhere,
+     whether or not a spoken forecast exists for that town. */
+  function loadLiveWeather(){
+    if (!here) return;
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + here.lat.toFixed(3) +
+      '&longitude=' + here.lon.toFixed(3) +
+      '&current=temperature_2m,weather_code' +
+      '&hourly=precipitation_probability,weather_code' +
+      '&daily=temperature_2m_max,temperature_2m_min' +
+      '&temperature_unit=fahrenheit&timezone=auto&forecast_days=1';
+    fetch(url).then(function(r){ return r.ok ? r.json() : null; }).then(function(f){
+      if (!f || !f.current || !f.daily) return;
+      var nowHour = Number(String(f.current.time || '').slice(11,13)) || 0;
+      var peak = null;
+      ((f.hourly && f.hourly.time) || []).forEach(function(t, i){
+        var h = Number(t.slice(11,13));
+        var pop = f.hourly.precipitation_probability ? f.hourly.precipitation_probability[i] : null;
+        if (h < nowHour || pop == null) return;
+        if (!peak || pop > peak.pop) peak = { pop: pop, hour: h, code: f.hourly.weather_code[i] };
+      });
+      var later = 'No rain expected for the rest of the day';
+      if (peak && peak.pop >= 30) {
+        var hh = peak.hour % 12 === 0 ? 12 : peak.hour % 12;
+        later = Math.round(peak.pop) + '% chance of ' + (isSnow(peak.code) ? 'snow' : 'rain') +
+          ' around ' + hh + (peak.hour < 12 ? ' AM' : ' PM');
+      }
+      liveWx = {
+        now: Math.round(f.current.temperature_2m),
+        high: Math.round(f.daily.temperature_2m_max[0]),
+        low: Math.round(f.daily.temperature_2m_min[0]),
+        cond: WMO[f.current.weather_code] || 'Unsettled',
+        later: later
+      };
+      paintWeather();
+    }).catch(function(){});
+  }
+  function paintWeather(){
+    var box = document.getElementById('wx');
+    if (!box) return;
+    if (!prefs.weather || !liveWx) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    box.innerHTML =
+      '<span class="wx-now">' + liveWx.now + '&deg;</span>' +
+      '<span class="wx-main"><span class="wx-cond">' + esc(liveWx.cond) +
+        ' &middot; High ' + liveWx.high + '&deg; &middot; Low ' + liveWx.low + '&deg;</span>' +
+      '<span class="wx-later">' + esc(liveWx.later) + '</span></span>';
+  }
+
+  /* Start whatever needs the network after the brief is already on screen:
+     the phone's position, the on-screen forecast, and the owner's birthdays
+     reminder. Each one re-plans the brief when it arrives, but only if the
+     listener hasn't started playing; a brief never changes under someone's
+     ears. */
+  function loadExtras(){
+    if (prefs.weather) {
+      locate(function(ok){
+        if (!ok) return;
+        loadLiveWeather();
+        replanIfIdle();
+      });
+    }
+    loadDatesClip();
+  }
+  function loadDatesClip(){
+    if (datesClip) return;
+    if (prefs.dates && store.get('dayKey') && window.crypto && crypto.subtle) {
+      fetch('myday/index.json?t=' + Date.now())
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(idx){
+          if (!idx || !idx.dates) return;
+          return importDayKey(store.get('dayKey')).then(function(key){
+            return fetch(idx.dates + '?t=' + Date.now())
+              .then(function(r){ if (!r.ok) throw new Error('missing'); return r.arrayBuffer(); })
+              .then(function(buf){ return openSealed(key, buf, idx.date, 'dates'); })
+              .then(function(plain){
+                datesClip = {
+                  url: URL.createObjectURL(new Blob([plain], {type:'audio/mpeg'})),
+                  duration: idx.dates_seconds || 8, date: idx.date
+                };
+                replanIfIdle();
+              });
+          });
+        }).catch(function(){});
+    }
+  }
+  function replanIfIdle(){
+    if (!prefs.done || !queue.length) return;
+    if (!audio.paused || qi !== 0 || (audio.currentTime || 0) > 0.5) return;
+    var before = key();
+    buildQueue();
+    if (key() === before) return;
+    loadSegment(0, false);
+    if (document.getElementById('scrub')) renderPlayer();
+  }
+
+  /* Plan a brief: the opening (date, weather, birthdays) and then the topics,
+     each at the length the slider's total allows. Pure: it reads the
+     preferences it is given, so the setup screen can preview a plan before
+     anything is saved. */
+  function planFor(p, idx){
+    var day = data.episodes[idx];
+    var segs = segsFor(day);
+    var items = [];
+
+    var intro = day.intro || {};
+    if (p.date && intro.date && intro.date.audio) {
+      items.push({ kind:'date', id:'date', label:'Today', icon:'calendar',
+        title: longDate(day.date), audio: intro.date.audio,
+        duration: intro.date.duration || 3, text: intro.date.text || '' });
+    }
+    var place = p.weather ? nearestPlace(day) : null;
+    if (place && place.audio) {
+      items.push({ kind:'weather', id:'weather', label:'Weather', icon:'cloud',
+        title: place.name + ' · ' + place.now + '°, high ' + place.high + '°, low ' + place.low + '°',
+        audio: place.audio, duration: place.duration || 15, text: place.text || '' });
+    }
+    if (p.dates && datesClip && datesClip.date === day.date) {
+      items.push({ kind:'dates', id:'dates', label:'Coming up', icon:'gift',
+        title: 'Birthdays and anniversaries this week',
+        audio: datesClip.url, duration: datesClip.duration, text: '' });
+    }
+
+    var list = [];
+    menu().forEach(function(m){
+      if (p.topics.indexOf(m.slug) === -1 || !segs[m.slug]) return;
+      var cuts = cutsOf(segs[m.slug]);
+      if (cuts.length) list.push({ m:m, seg:segs[m.slug], cuts:cuts });
+    });
+    var opening = items.reduce(function(a,q){ return a + q.duration; }, 0);
+    var level = pickCuts(list, Math.max(0, p.length - opening));
+    list.forEach(function(t, i){
+      var cut = t.cuts[level[i]];
+      items.push({ kind:'topic', id:t.m.slug, slug:t.m.slug, label:t.m.label, icon:t.m.icon,
+        title:t.seg.title, seg:t.seg, audio:cut.audio, duration:cut.duration || 0,
+        transcript:cut.transcript });
+    });
+    return items;
+  }
+  // The shortest brief these choices can make: every topic at its headline.
+  function minimumFor(p, idx){
+    var floor = { topics:p.topics, date:p.date, weather:p.weather, dates:p.dates, length:0 };
+    return planFor(floor, idx).reduce(function(a,q){ return a + q.duration; }, 0);
+  }
+
+  function buildQueue(){
+    queue = planFor(prefs, dayIdx);
+    if (!queue.some(function(q){ return q.kind === 'topic'; })) queue = [];
     qi = 0;
   }
 
@@ -567,95 +872,240 @@
     return elapsedBefore(qi) + (audio.currentTime || 0);
   }
 
-  // The segment whose story leads: highest model-assigned weight. This is how
+  // The topic whose story leads: highest model-assigned weight. This is how
   // one cover gets chosen to represent a brief assembled from several topics.
   function leadSegment(){
-    if (!queue.length) return null;
-    return queue.reduce(function(a,b){
+    var topics = queue.filter(function(q){ return q.kind === 'topic'; });
+    if (!topics.length) return null;
+    return topics.reduce(function(a,b){
       return (b.seg.weight||0) > (a.seg.weight||0) ? b : a;
     }).seg;
   }
 
-  // ---------- the picker ----------
-  function renderPicker(){
+  /* ---------- setup ----------
+     Three short steps the first time, and the same three whenever the
+     listener wants to change something. Nothing is saved until the last
+     step, so backing out leaves the brief as it was. */
+  var draft = null, setupStep = 1;
+  function openSetup(){
+    audio.pause();
+    draft = { topics: prefs.topics.slice(), date: prefs.date, weather: prefs.weather,
+              dates: prefs.dates, length: prefs.length };
+    setupStep = 1;
+    renderSetup('in');
+    document.getElementById('edit').style.display = 'none';
+    mini.classList.remove('show');
+    window.scrollTo({top:0});
+  }
+  function closeSetup(save){
+    if (save) {
+      prefs.topics = draft.topics.slice(); prefs.date = draft.date;
+      prefs.weather = draft.weather; prefs.dates = draft.dates;
+      prefs.length = draft.length; prefs.done = true;
+      savePrefs();
+    }
+    draft = null;
+    buildQueue();
+    if (!queue.length) { openSetup(); return; }
+    loadSegment(0, false);
+    renderPlayer();
+    loadExtras();
+    window.scrollTo({top:0});
+  }
+
+  function renderSetup(motion){
     var day = data.episodes[dayIdx];
-    var avail = availableOn(day);
-    var sel = picked.slice();
-
-    function cards(){
-      return avail.map(function(m){
-        var on = sel.indexOf(m.slug) !== -1;
-        var full = sel.length >= MAXSEL && !on;
-        return '<button class="card'+(on?' sel':'')+(full?' full':'')+'" data-slug="'+esc(m.slug)+'">'+
-          '<span class="card-ico">'+icon(m.icon)+'</span>'+
-          '<span class="card-main"><span class="card-label">'+esc(m.label)+'</span>'+
-          '<span class="card-blurb">'+esc(m.blurb)+'</span></span>'+
-          '<span class="tick">'+I_TICK+'</span></button>';
-      }).join('');
-    }
-    // The real length of what they have picked, added up from today's actual
-    // audio. This used to be an estimate (topics x 45 seconds) and it was
-    // wrong by half a minute; the files know how long they are.
-    function note(){
-      if (!sel.length) return 'Pick up to ' + MAXSEL + '.';
-      var segs = segsFor(day), secs = 0, solo = sel.length === 1;
-      sel.forEach(function(slug){
-        var g = segs[slug]; if (!g) return;
-        var c = solo ? (g.long || g.short) : (g.short || g.long);
-        secs += (c && c.duration) || 0;
-      });
-      if (solo) return 'One topic · the full version, ' + fmt(secs);
-      return sel.length + ' topics · ' + fmt(secs) + ' today';
-    }
-
-    app.innerHTML =
-      '<div class="picker">' +
-        '<h2>What do you want to hear?</h2>' +
-        '<p class="lede">Pick up to '+MAXSEL+' topics and we\'ll build you one continuous '+
-        'briefing, never longer than three minutes. Choose just one and you get '+
-        'the long version of it instead.</p>' +
-        '<div class="grid" id="grid">'+cards()+'</div>' +
-        '<div class="picker-foot">' +
-          '<button class="cta" id="start"'+(sel.length?'':' disabled')+'>Start listening</button>' +
-          '<div class="picker-note" id="note">'+esc(note())+'</div>' +
-        '</div>' +
+    var editing = prefs.done;
+    var head =
+      '<div class="steps"><i class="' + (setupStep >= 1 ? 'on' : '') + '"></i>' +
+      '<i class="' + (setupStep >= 2 ? 'on' : '') + '"></i>' +
+      '<i class="' + (setupStep >= 3 ? 'on' : '') + '"></i>' +
+      (editing ? '<button class="steps-x" id="setupX" aria-label="Close without saving">Cancel</button>' : '') +
       '</div>';
+    var body = setupStep === 1 ? stepTopics(day) : setupStep === 2 ? stepMorning(day) : stepLength(day);
+    app.innerHTML = '<div class="picker setup ' + (motion || 'in') + '">' + head + body + '</div>';
+    var x = document.getElementById('setupX');
+    if (x) x.onclick = function(){ closeSetup(false); };
+    if (setupStep === 1) wireTopics(day);
+    else if (setupStep === 2) wireMorning(day);
+    else wireLength(day);
+  }
+  function go(step){
+    var forward = step > setupStep;
+    setupStep = step;
+    renderSetup(forward ? 'fwd' : 'back');
+    window.scrollTo({top:0});
+  }
 
+  // Step 1: topics
+  function topicCards(day){
+    return availableOn(day).map(function(m){
+      var on = draft.topics.indexOf(m.slug) !== -1;
+      return '<button class="card'+(on?' sel':'')+'" data-slug="'+esc(m.slug)+'">'+
+        '<span class="card-ico">'+icon(m.icon)+'</span>'+
+        '<span class="card-main"><span class="card-label">'+esc(m.label)+'</span>'+
+        '<span class="card-blurb">'+esc(m.blurb)+'</span></span>'+
+        '<span class="tick">'+I_TICK+'</span></button>';
+    }).join('');
+  }
+  function stepTopics(day){
+    return '<h2>What do you want to hear?</h2>' +
+      '<p class="lede">Pick the topics for your morning brief. Choose as many as you like; ' +
+      'you decide how long the whole thing runs in a moment.</p>' +
+      '<div class="grid" id="grid">' + topicCards(day) + '</div>' +
+      '<div class="picker-foot"><button class="cta" id="next"' +
+        (draft.topics.length ? '' : ' disabled') + '>Next</button>' +
+      '<div class="picker-note" id="note">' + topicNote() + '</div></div>';
+  }
+  function topicNote(){
+    var n = draft.topics.length;
+    return n ? n + (n === 1 ? ' topic' : ' topics') + ' selected' : 'Pick at least one.';
+  }
+  function wireTopics(day){
     document.getElementById('grid').addEventListener('click', function(ev){
       var b = ev.target.closest('.card');
       if (!b) return;
-      var slug = b.dataset.slug, at = sel.indexOf(slug);
-      if (at !== -1) sel.splice(at,1);
-      else if (sel.length < MAXSEL) sel.push(slug);
-      else return;
-      // Re-render just the cards and the footer, not the whole screen.
-      document.getElementById('grid').innerHTML = cards();
-      document.getElementById('note').textContent = note();
-      document.getElementById('start').disabled = !sel.length;
+      var slug = b.dataset.slug, at = draft.topics.indexOf(slug);
+      if (at !== -1) draft.topics.splice(at,1); else draft.topics.push(slug);
+      b.classList.toggle('sel', at === -1);
+      document.getElementById('note').textContent = topicNote();
+      document.getElementById('next').disabled = !draft.topics.length;
     });
+    document.getElementById('next').onclick = function(){ if (draft.topics.length) go(2); };
+  }
 
-    document.getElementById('start').onclick = function(){
-      if (!sel.length) return;
-      picked = sel.slice();
-      store.set('topics', JSON.stringify(picked));
-      buildQueue();
-      loadSegment(0, false);
-      renderPlayer();
-      window.scrollTo({top:0});
+  // Step 2: the opening of the brief
+  function row(id, ico, label, blurb, on, disabled, status){
+    return '<div class="opt' + (disabled ? ' off' : '') + '">' +
+      '<span class="card-ico">' + icon(ico) + '</span>' +
+      '<span class="card-main"><span class="card-label">' + esc(label) + '</span>' +
+      '<span class="card-blurb">' + esc(blurb) + '</span>' +
+      '<span class="opt-status" id="' + id + 'Status">' + esc(status || '') + '</span></span>' +
+      '<button class="switch' + (on && !disabled ? ' on' : '') + '" id="' + id + '" role="switch" ' +
+        'aria-checked="' + (on && !disabled ? 'true' : 'false') + '" aria-label="' + esc(label) + '"' +
+        (disabled ? ' disabled' : '') + '><i></i></button></div>';
+  }
+  function weatherStatus(day){
+    if (!draft.weather) return '';
+    if (!here) return 'Waiting for your location…';
+    var p = nearestPlace(day);
+    if (p) return 'Spoken forecast for ' + p.name + ', and on screen for your exact spot.';
+    var names = ((day.weather && day.weather.places) || []).map(function(x){ return x.name; });
+    return 'On screen for your exact spot. A spoken forecast isn’t recorded for your area yet' +
+      (names.length ? ' (so far: ' + names.join(', ') + ').' : '.');
+  }
+  function stepMorning(day){
+    var hasKey = !!store.get('dayKey');
+    return '<h2>How should it open?</h2>' +
+      '<p class="lede">Your brief can start with a few things about your own day before the news.</p>' +
+      '<div class="opts">' +
+        row('optDate', 'calendar', 'The date', 'The day of the week and the date, spoken first.',
+            draft.date, false, '') +
+        row('optWeather', 'cloud', 'Weather',
+            'Now, today’s high and low, and what to expect for the rest of the day.',
+            draft.weather, false, weatherStatus(day)) +
+        row('optDates', 'gift', 'Birthdays and anniversaries',
+            'A reminder of any coming up in the next week, from your calendar.',
+            draft.dates, !hasKey,
+            hasKey ? '' : 'Needs a connected calendar. Unlock My Day on this device to turn it on.') +
+      '</div>' +
+      '<div class="picker-foot"><div class="cta-row">' +
+        '<button class="cta ghost" id="back">Back</button>' +
+        '<button class="cta" id="next">Next</button></div></div>';
+  }
+  function flip(id, on){
+    var b = document.getElementById(id);
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+  function wireMorning(day){
+    document.getElementById('optDate').onclick = function(){
+      draft.date = !draft.date; flip('optDate', draft.date);
     };
+    document.getElementById('optDates').onclick = function(){
+      draft.dates = !draft.dates; flip('optDates', draft.dates);
+    };
+    function askWhere(){
+      var s = document.getElementById('optWeatherStatus');
+      if (s) s.textContent = weatherStatus(day);
+      locate(function(ok){
+        var el = document.getElementById('optWeatherStatus');
+        if (!el) return;
+        el.textContent = ok ? weatherStatus(day)
+          : 'Location is off for this app, so weather can’t be shown. Allow it in your phone’s settings, then switch this on again.';
+      });
+    }
+    document.getElementById('optWeather').onclick = function(){
+      draft.weather = !draft.weather; flip('optWeather', draft.weather);
+      if (draft.weather) askWhere();
+      else document.getElementById('optWeatherStatus').textContent = '';
+    };
+    if (draft.weather && !here) askWhere();
+    document.getElementById('back').onclick = function(){ go(1); };
+    document.getElementById('next').onclick = function(){ go(3); };
+  }
 
-    document.getElementById('edit').style.display = 'none';
-    mini.classList.remove('show');
+  // Step 3: how long
+  function stepLength(day){
+    return '<h2>How long should it run?</h2>' +
+      '<p class="lede">Set the total. Every topic you picked is always included; the extra time ' +
+      'goes to whichever had the biggest news that day.</p>' +
+      '<div class="len"><div class="len-read" id="lenRead"></div>' +
+        '<input class="scrub len-range" id="len" type="range" min="' + LENGTHS.min + '" max="' +
+          LENGTHS.max + '" step="' + LENGTHS.step + '" aria-label="Brief length">' +
+        '<div class="len-ticks"><span>2 min</span><span>3</span><span>4</span><span>5 min</span></div>' +
+      '</div>' +
+      '<div class="sec-head"><span>Today, that looks like</span><i></i></div>' +
+      '<div class="preview" id="preview"></div>' +
+      '<div class="picker-foot"><div class="cta-row">' +
+        '<button class="cta ghost" id="back">Back</button>' +
+        '<button class="cta" id="next">' + (prefs.done ? 'Save' : 'Start listening') + '</button></div>' +
+      '<div class="picker-note" id="note"></div></div>';
+  }
+  function wireLength(day){
+    var range = document.getElementById('len');
+    // The slider can't promise less than the picks need: six topics at their
+    // headline length plus the opening is the floor.
+    var need = minimumFor(draft, dayIdx);
+    var floor = Math.min(LENGTHS.max, Math.ceil(need / LENGTHS.step) * LENGTHS.step);
+    function paintLen(){
+      if (draft.length < floor) draft.length = floor;
+      range.value = draft.length;
+      range.style.setProperty('--pct',
+        ((draft.length - LENGTHS.min) / (LENGTHS.max - LENGTHS.min) * 100) + '%');
+      var plan = planFor(draft, dayIdx);
+      var total = plan.reduce(function(a,q){ return a + q.duration; }, 0);
+      document.getElementById('lenRead').innerHTML =
+        fmt(draft.length) + '<small>up to</small>';
+      document.getElementById('preview').innerHTML = plan.map(function(q){
+        return '<div class="pre"><span class="pre-ico">' + icon(q.icon) + '</span>' +
+          '<span class="pre-label">' + esc(q.label) + '</span>' +
+          '<span class="pre-dur">' + fmt(q.duration) + '</span></div>';
+      }).join('') + '<div class="pre total"><span class="pre-ico"></span>' +
+        '<span class="pre-label">Today’s brief</span><span class="pre-dur">' + fmt(total) + '</span></div>';
+      // Only explain the floor while the listener is pressed against it.
+      document.getElementById('note').textContent =
+        (floor > LENGTHS.min && draft.length === floor)
+          ? 'Your picks need at least ' + fmt(floor) + '.'
+          : (total < draft.length - 45 ? 'There isn’t more than that to say today, so it runs shorter.' : '');
+    }
+    range.oninput = function(){
+      draft.length = Math.max(floor, Number(this.value));
+      paintLen();
+    };
+    paintLen();
+    document.getElementById('back').onclick = function(){ go(2); };
+    document.getElementById('next').onclick = function(){ closeSetup(true); };
   }
 
   // ---------- the player ----------
   function renderPlayer(){
     var day = data.episodes[dayIdx];
     var lead = leadSegment();
-    if (!lead) { renderPicker(); return; }
+    if (!lead) { openSetup(); return; }
 
     var anySources = queue.some(function(q){
-      return q.seg.sources && q.seg.sources.length; });
+      return q.seg && q.seg.sources && q.seg.sources.length; });
 
     app.innerHTML =
       '<div class="np">' +
@@ -664,6 +1114,7 @@
         '<h1 class="title">'+esc(lead.title)+'</h1>' +
         (lead.teaser ? '<p class="teaser">'+esc(lead.teaser)+'</p>' : '') +
         creditHtml(lead) +
+        '<div class="wx" id="wx" style="display:none"></div>' +
         '<input class="scrub" id="scrub" type="range" min="0" max="1000" value="0" aria-label="Seek">' +
         '<div class="times"><span id="cur">0:00</span>'+
           '<span id="dur">'+fmt(totalDuration())+'</span></div>' +
@@ -694,6 +1145,8 @@
     if (data.episodes.length > 1) buildArchive();
     wire();
     syncPlay();
+    paint();
+    paintWeather();
     document.getElementById('edit').style.display = '';
     document.getElementById('miniArt').src = coverOf(lead);
   }
@@ -706,7 +1159,7 @@
       return '<button class="chap'+cls+'" data-i="'+i+'">'+
         '<span class="chap-ico">'+icon(q.icon)+'</span>'+
         '<span class="chap-main"><span class="chap-label">'+esc(q.label)+'</span>'+
-        '<span class="chap-title">'+esc(q.seg.title)+'</span></span>'+
+        '<span class="chap-title">'+esc(q.title)+'</span></span>'+
         '<span class="chap-dur">'+fmt(q.duration)+'</span></button>';
     }).join('');
     box.onclick = function(ev){
@@ -730,7 +1183,7 @@
 
   function sourcesHtml(){
     var out = queue.map(function(q){
-      var list = (q.seg.sources||[]);
+      var list = (q.seg && q.seg.sources) || [];
       if (!list.length) return '';
       return '<div class="seg-head">'+esc(q.label)+'</div>' + list.map(function(s){
         return '<a class="src" href="'+esc(s.link)+'" target="_blank" rel="noopener noreferrer">'+
@@ -740,22 +1193,18 @@
     }).join('');
     return out + '<div class="src-foot">Reporting from the outlets above. '+
       'Market levels via Yahoo Finance; Treasury yields from the US Treasury '+
-      'daily curve; sectors use the SPDR sector ETFs.</div>';
+      'daily curve; sectors use the SPDR sector ETFs. Weather from Open-Meteo.</div>';
   }
 
   function buildArchive(){
     var box = document.getElementById('archive');
     box.innerHTML = data.episodes.map(function(e,i){
-      var segs = segsFor(e);
-      // Show each day by whichever of this listener's topics led it.
-      var mine = picked.map(function(s){ return segs[s]; }).filter(Boolean);
-      var pool = mine.length ? mine : Object.keys(segs).map(function(k){ return segs[k]; });
-      if (!pool.length) return '';
-      var lead = pool.reduce(function(a,b){
-        return (b.weight||0) > (a.weight||0) ? b : a; });
-      var secs = pool.reduce(function(a,s){
-        var c = (mine.length === 1 ? (s.long||s.short) : (s.short||s.long));
-        return a + ((c && c.duration) || 0); }, 0);
+      var plan = planFor(prefs, i);
+      var mine = plan.filter(function(q){ return q.kind === 'topic'; });
+      if (!mine.length) return '';
+      var lead = mine.reduce(function(a,b){
+        return (b.seg.weight||0) > (a.seg.weight||0) ? b : a; }).seg;
+      var secs = plan.reduce(function(a,q){ return a + q.duration; }, 0);
       return '<button class="ep'+(i===dayIdx?' current':'')+'" data-i="'+i+'">'+
         '<img class="ep-art" src="'+esc(coverOf(lead))+'" alt="" loading="lazy">'+
         '<span class="ep-main"><span class="ep-title">'+esc(lead.title)+'</span>'+
@@ -767,6 +1216,7 @@
       if (!b) return;
       dayIdx = Number(b.dataset.i);
       buildQueue();
+      if (!queue.length) { dayIdx = 0; buildQueue(); }
       loadSegment(0, true);
       renderPlayer();
       window.scrollTo({top:0, behavior:'smooth'});
@@ -814,9 +1264,10 @@
     box.dataset.loaded = key();
     box.textContent = 'Loading…';
     Promise.all(queue.map(function(q){
-      var path = q.cut && q.cut.transcript;
-      if (!path) return Promise.resolve({label:q.label, text:''});
-      return fetch(path).then(function(r){ return r.ok ? r.text() : ''; })
+      if (q.kind === 'dates') return Promise.resolve({label:q.label,
+        text:'Your reminder is private, so it isn’t written out here. See it in the My Day tab.'});
+      if (!q.transcript) return Promise.resolve({label:q.label, text:q.text || ''});
+      return fetch(q.transcript).then(function(r){ return r.ok ? r.text() : ''; })
         .then(function(t){ return {label:q.label, text:t}; })
         .catch(function(){ return {label:q.label, text:''}; });
     })).then(function(parts){
@@ -827,7 +1278,8 @@
     });
   }
   function key(){
-    return data.episodes[dayIdx].date + '|' + queue.map(function(q){ return q.slug; }).join(',');
+    return data.episodes[dayIdx].date + '|' +
+      queue.map(function(q){ return q.id + ':' + q.duration; }).join(',');
   }
 
   function wire(){
@@ -876,20 +1328,20 @@
     }
   }
 
-  /* Load one segment into the single <audio> element.
+  /* Load one chapter into the single <audio> element.
 
      There is deliberately ONE element for the whole playthrough, with its src
-     swapped between segments, rather than one element per segment. On iOS the
+     swapped between chapters, rather than one element per chapter. On iOS the
      permission to play audio is granted to an element by a user gesture; a
      freshly created element has no such permission, so a brief assembled from
-     four files would stop dead after the first one. Swapping src on the
+     several files would stop dead after the first one. Swapping src on the
      element the listener actually pressed play on keeps that permission for
      the whole brief. */
   function loadSegment(i, autoplay, at){
     if (!queue.length) return;
     qi = Math.max(0, Math.min(queue.length - 1, i));
     var q = queue[qi];
-    audio.src = q.cut.audio;
+    audio.src = q.audio;
     audio.playbackRate = speed;
     if (at) {
       // Wait for metadata, or the seek is discarded by the element.
@@ -903,8 +1355,7 @@
     }
     setMediaSession();
     renderChapters();
-    document.getElementById('miniTitle').textContent =
-      q.solo ? q.seg.title : (q.label + ' · ' + q.seg.title);
+    document.getElementById('miniTitle').textContent = q.label + ' · ' + q.title;
     if (autoplay) audio.play().catch(function(){});
   }
 
@@ -913,7 +1364,7 @@
     var day = data.episodes[dayIdx], q = queue[qi], lead = leadSegment();
     try {
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: q.solo ? q.seg.title : (q.label + ' — ' + q.seg.title),
+        title: q.label + ' — ' + q.title,
         artist: data.show || "What's Up?",
         album: longDate(day.date),
         artwork: [{ src: new URL(coverOf(lead), location.href).href,
@@ -1019,11 +1470,7 @@
     else if (e.code === 'ArrowRight') seekGlobal(globalTime() + 30);
   });
 
-  document.getElementById('edit').onclick = function(){
-    audio.pause();
-    renderPicker();
-    window.scrollTo({top:0});
-  };
+  document.getElementById('edit').onclick = openSetup;
 
   // ---------- notifications ----------
   var sheet = document.getElementById('sheet');
@@ -1182,6 +1629,7 @@
           store.set('dayKey', String(keyText).trim());
           renderDay();
           prepareDayAudio();
+          loadDatesClip();
         });
     }).catch(function(err){
       var why = (err && err.message === 'format')
@@ -1328,6 +1776,11 @@
       return '<div class="tom"><span>' + (ev.all_day ? 'All day' : esc(dayClock(ev.start, tz))) +
         '</span><span>' + esc(ev.title) + '</span></div>';
     }).join('');
+    var coming = (doc.dates || []).map(function(d){
+      var when = d.days === 0 ? 'Today' : d.days === 1 ? 'Tomorrow'
+        : new Date(d.date + 'T12:00:00').toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric'});
+      return '<div class="tom"><span>' + esc(when) + '</span><span>' + esc(d.title) + '</span></div>';
+    }).join('');
     var hasAudio = !!(dayState.index && dayState.index.audio);
 
     dayBox.innerHTML =
@@ -1343,6 +1796,7 @@
             '<span class="rundown-bar" id="rundownBar"></span></button>'
         : '') +
       (heads ? '<ul class="heads">' + heads + '</ul>' : '') +
+      (coming ? '<div class="sec-head"><span>Birthdays and anniversaries</span><i></i></div>' + coming : '') +
       (events
         ? '<div class="sec-head"><span>Today</span><i></i></div>' + events
         : '') +
@@ -1435,7 +1889,7 @@
         return;
       }
 
-      MAXSEL = data.maxSelection || 4;
+      if (data.lengths) LENGTHS = data.lengths;
       var name = data.show || "What's Up?";
       document.getElementById('showTitle').textContent = name;
       document.title = name;
@@ -1451,24 +1905,33 @@
       var at = want ? data.episodes.findIndex(function(e){ return e.date === want; }) : -1;
       dayIdx = at >= 0 ? at : 0;
 
-      // ?topics=a,b shares a mix; otherwise use what this device chose before
-      var fromUrl = (params.get('topics')||'').split(',').filter(Boolean);
-      var saved = [];
-      try { saved = JSON.parse(store.get('topics') || '[]') || []; } catch(e){}
+      loadPrefs();
       var known = menu().map(function(m){ return m.slug; });
-      picked = (fromUrl.length ? fromUrl : saved)
-                 .filter(function(s){ return known.indexOf(s) !== -1; })
-                 .slice(0, MAXSEL);
+      prefs.topics = prefs.topics.filter(function(t){ return known.indexOf(t) !== -1; });
+      prefs.length = Math.min(LENGTHS.max, Math.max(LENGTHS.min, prefs.length || LENGTHS['default']));
+
+      // ?topics=a,b shares a mix for this visit without overwriting saved choices
+      var fromUrl = (params.get('topics')||'').split(',')
+        .filter(function(t){ return known.indexOf(t) !== -1; });
+      if (fromUrl.length) { prefs.topics = fromUrl; prefs.done = true; }
+
+      // A position from earlier this morning is good enough to plan with, and
+      // using it now avoids the brief redrawing a moment after it appears.
+      try {
+        var was = JSON.parse(store.get('here') || 'null');
+        if (was && Date.now() - was.at < 3*3600*1000) here = was;
+      } catch(e){}
 
       bellState();
 
-      if (!picked.length) { renderPicker(); return; }
+      if (!prefs.done || !prefs.topics.length) { openSetup(); return; }
       buildQueue();
-      if (!queue.length) { renderPicker(); return; }
+      if (!queue.length) { openSetup(); return; }
       loadSegment(0, false);
       var resume = Number(store.get('pos:'+key()) || 0);
       if (resume > 5 && resume < totalDuration() - 10) seekGlobal(resume);
       renderPlayer();
+      loadExtras();
     })
     .catch(function(){
       app.innerHTML = '<div class="state">No episodes yet.<br>The first one lands after the workflow runs.</div>';

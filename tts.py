@@ -84,37 +84,28 @@ def _openai_tts(text: str, out_path: Path) -> None:
         response.stream_to_file(str(out_path))
 
 
-def _compress(path: Path) -> None:
-    """Re-encode to small, even-loudness mono speech audio.
+# There used to be a _compress() step here that re-encoded every file to
+# 32 kbps with loudness normalisation. It is gone on purpose.
+#
+# The speech service already hands back a finished 48 kbps MP3. Re-encoding
+# it at 32 kbps threw away the top of the voice (the encoder low-passes hard
+# at that rate), and any cut that was then time-fitted got encoded a THIRD
+# time. The listener's description was exact: "a little bit radio static,
+# like it's talking through a cup." Each lossy generation costs quality and
+# the saving was about a megabyte a day. The audio now ships exactly as the
+# voice service made it, and is only re-encoded -- once, at a higher rate --
+# when a cut has to be sped up to fit its time limit.
 
-    A 7-minute brief lands around 1.5 MB, which keeps the repo tiny and makes
-    the episode load instantly on a phone.
+
+def synthesize(text: str, out_path: Path, min_words: int = 20) -> Path:
+    """Turn a script into an MP3. Raises only if every engine fails.
+
+    min_words guards against an empty or mangled script reaching the voice;
+    pass a small number for deliberately tiny clips such as the spoken date.
     """
-    if not shutil.which("ffmpeg"):
-        print("  ! ffmpeg not found, shipping raw TTS output")
-        return
-
-    tmp = path.with_suffix(".tmp.mp3")
-    cmd = [
-        "ffmpeg", "-y", "-loglevel", "error",
-        "-i", str(path),
-        "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
-        "-ac", "1", "-ar", "24000", "-b:a", "32k",
-        str(tmp),
-    ]
-    try:
-        subprocess.run(cmd, check=True)
-        tmp.replace(path)
-    except subprocess.CalledProcessError as exc:
-        print(f"  ! ffmpeg pass failed ({exc}); keeping raw audio")
-        tmp.unlink(missing_ok=True)
-
-
-def synthesize(text: str, out_path: Path) -> Path:
-    """Turn the episode script into an MP3. Raises only if every engine fails."""
     out_path.parent.mkdir(parents=True, exist_ok=True)
     spoken = clean_for_speech(text)
-    if len(spoken.split()) < 20:
+    if len(spoken.split()) < min_words:
         raise RuntimeError(
             f"refusing to synthesize {len(spoken.split())} words of speech "
             f"(input was {len(text)} chars) -- the script never made it here intact"
@@ -142,8 +133,9 @@ def synthesize(text: str, out_path: Path) -> Path:
         try:
             print(f"  synthesizing with {name} ...")
             fn()
-            if out_path.exists() and out_path.stat().st_size > 10_000:
-                _compress(out_path)
+            # About a second and a half of speech at the service's bitrate.
+            floor = 10_000 if min_words >= 20 else 3_000
+            if out_path.exists() and out_path.stat().st_size > floor:
                 size_mb = out_path.stat().st_size / 1_048_576
                 print(f"  + audio written: {out_path.name} ({size_mb:.2f} MB)")
                 return out_path
@@ -217,7 +209,9 @@ def fit_duration(path: Path, limit_seconds: float, max_tempo: float = 1.15) -> f
         "ffmpeg", "-y", "-loglevel", "error",
         "-i", str(path),
         "-af", f"atempo={tempo:.4f}",
-        "-ac", "1", "-ar", "24000", "-b:a", "32k",
+        # The one re-encode a cut can get. 64 kbps is comfortably above the
+        # source's 48, so this generation costs as little as it can.
+        "-ac", "1", "-ar", "24000", "-b:a", "64k",
         str(tmp),
     ]
     try:

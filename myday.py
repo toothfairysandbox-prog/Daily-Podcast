@@ -48,7 +48,14 @@ RUNDOWN_LIMIT = 45.0
 
 PLAN_FILE = "myday/day.json.enc"
 AUDIO_FILE = "myday/day.mp3.enc"
+DATES_FILE = "myday/dates.mp3.enc"
 INDEX_FILE = "myday/index.json"
+
+# How far ahead to look for birthdays and anniversaries, in days.
+DATES_AHEAD = 7
+# What marks a calendar event as one. The owner keeps these as ordinary
+# events they created ("Mom's birthday"), so the title is the only signal.
+DATES_PATTERN = re.compile(r"\b(birthday|b-?day|anniversary)\b", re.I)
 
 
 # --------------------------------------------------------------------------
@@ -199,6 +206,62 @@ def events_between(cal, start: datetime, end: datetime, tz: ZoneInfo,
 
 
 # --------------------------------------------------------------------------
+# Birthdays and anniversaries
+# --------------------------------------------------------------------------
+
+def upcoming_dates(events: list[dict], today: date) -> list[dict]:
+    """Birthdays and anniversaries among `events`, soonest first."""
+    out, seen = [], set()
+    for ev in events:
+        if not DATES_PATTERN.search(ev["title"]):
+            continue
+        day = datetime.fromisoformat(ev["start"]).date()
+        away = (day - today).days
+        if not 0 <= away <= DATES_AHEAD:
+            continue
+        mark = (ev["title"].lower(), day)
+        if mark in seen:
+            continue
+        seen.add(mark)
+        out.append({"date": day.isoformat(), "title": ev["title"], "days": away})
+    out.sort(key=lambda d: (d["days"], d["title"]))
+    return out[:8]
+
+
+def _speakable(title: str) -> str:
+    """A calendar title with anything a voice would trip on removed."""
+    text = re.sub(r"[^\w\s'’&.,-]", " ", title)      # emoji, brackets, symbols
+    text = re.sub(r"\bb-?day\b", "birthday", text, flags=re.I)   # "bday" is not a word
+    return " ".join(text.split()).strip(" .,-")
+
+
+def dates_script(dates: list[dict], today: date) -> str:
+    """The spoken reminder. Written by template: it is a list of the owner's
+    own event titles and the days they fall on, and needs no model."""
+    parts = []
+    for d in dates:
+        name = _speakable(d["title"])
+        if not name:
+            continue
+        if d["days"] == 0:
+            when = "is today"
+        elif d["days"] == 1:
+            when = "is tomorrow"
+        elif d["days"] == 7:
+            when = "is a week from today"
+        else:
+            when = "is on " + date.fromisoformat(d["date"]).strftime("%A")
+        parts.append(f"{name} {when}")
+    if not parts:
+        return ""
+    if len(parts) == 1:
+        body = parts[0]
+    else:
+        body = ", ".join(parts[:-1]) + ", and " + parts[-1]
+    return f"Dates to remember this week. {body}."
+
+
+# --------------------------------------------------------------------------
 # The plan
 # --------------------------------------------------------------------------
 
@@ -341,6 +404,8 @@ def assemble(today: list[dict], tomorrow: list[dict], plan: dict,
     }
 
 
+SAMPLE_WEEK: list[dict] = []     # filled in by _sample()
+
 SAMPLE_TODAY = [
     {"start": "T09:00", "end": "T09:30", "all_day": False,
      "title": "Team standup", "location": "", "online": True,
@@ -369,6 +434,15 @@ def _sample(date_str: str, tz: ZoneInfo) -> tuple[list[dict], list[dict], dict]:
     today = [dict(ev, start=at(date_str, ev["start"]), end=at(date_str, ev["end"]))
              for ev in SAMPLE_TODAY]
     nxt = (date.fromisoformat(date_str) + timedelta(days=1)).isoformat()
+    global SAMPLE_WEEK
+    SAMPLE_WEEK = [
+        {"start": at((date.fromisoformat(date_str) + timedelta(days=2)).isoformat(), "T00:00"),
+         "end": at((date.fromisoformat(date_str) + timedelta(days=3)).isoformat(), "T00:00"),
+         "all_day": True, "title": "Mom's birthday 🎂"},
+        {"start": at((date.fromisoformat(date_str) + timedelta(days=5)).isoformat(), "T00:00"),
+         "end": at((date.fromisoformat(date_str) + timedelta(days=6)).isoformat(), "T00:00"),
+         "all_day": True, "title": "Wedding anniversary"},
+    ]
     tomorrow = [{"start": at(nxt, "T08:30"), "end": at(nxt, "T09:30"),
                  "all_day": False, "title": "Board prep", "location": "",
                  "online": True, "who": [], "who_count": 0, "description": ""}]
@@ -440,6 +514,7 @@ def build(public_dir: Path, dry_run: bool = False, skip_audio: bool = False) -> 
     try:
         if dry_run:
             today, tomorrow, plan = _sample(date_str, tz)
+            week = SAMPLE_WEEK
         else:
             stage = "fetching the calendar"
             cal = fetch_calendar(url)
@@ -448,6 +523,9 @@ def build(public_dir: Path, dry_run: bool = False, skip_audio: bool = False) -> 
             today = events_between(cal, day_start, day_end, tz, my_email)
             tomorrow = events_between(cal, day_end, day_end + timedelta(days=1),
                                       tz, my_email)
+            week = events_between(cal, day_start,
+                                  day_start + timedelta(days=DATES_AHEAD + 1),
+                                  tz, my_email)
             if today:
                 stage = "writing the plan"
                 plan = write_plan(today, tomorrow, date_label)
@@ -457,13 +535,31 @@ def build(public_dir: Path, dry_run: bool = False, skip_audio: bool = False) -> 
 
         stage = "assembling the plan"
         doc = assemble(today, tomorrow, plan, date_str, tz_name)
+        stage = "finding birthdays and anniversaries"
+        doc["dates"] = upcoming_dates(week, now_local.date())
 
         out_dir.mkdir(parents=True, exist_ok=True)
         has_audio = False
         script = str(plan.get("script", "")).strip()
         if script and not skip_audio and len(script.split()) >= 20:
             stage = "recording the rundown"
-            has_audio = _record(script, key, date_str, public_dir, dry_run, doc)
+            secs = _record(script, key, date_str, public_dir, dry_run,
+                           "audio", AUDIO_FILE, RUNDOWN_LIMIT, 20, 20)
+            if secs is not None:
+                doc["audio_seconds"] = secs
+                has_audio = True
+
+        # The birthdays reminder is its own short clip, because it plays as
+        # part of the morning brief rather than inside the My Day tab.
+        has_dates = False
+        reminder = dates_script(doc["dates"], now_local.date())
+        if reminder and not skip_audio:
+            stage = "recording the dates reminder"
+            secs = _record(reminder, key, date_str, public_dir, dry_run,
+                           "dates", DATES_FILE, 30.0, 4, 6)
+            if secs is not None:
+                doc["dates_seconds"] = secs
+                has_dates = True
 
         stage = "encrypting the plan"
         blob = encrypt(key, json.dumps(doc).encode("utf-8"), aad_for(date_str, "plan"))
@@ -471,6 +567,8 @@ def build(public_dir: Path, dry_run: bool = False, skip_audio: bool = False) -> 
         (public_dir / INDEX_FILE).write_text(json.dumps({
             "v": 1, "date": date_str, "updated": doc["generated"],
             "plan": PLAN_FILE, "audio": AUDIO_FILE if has_audio else None,
+            "dates": DATES_FILE if has_dates else None,
+            "dates_seconds": doc.get("dates_seconds", 0) if has_dates else 0,
         }), encoding="utf-8")
     except Exception as exc:  # noqa: BLE001
         shutil.rmtree(out_dir, ignore_errors=True)
@@ -479,13 +577,20 @@ def build(public_dir: Path, dry_run: bool = False, skip_audio: bool = False) -> 
         return False
 
     print(f"  + My Day published, encrypted"
-          f"{' with spoken rundown' if has_audio else ''}")
+          f"{' with spoken rundown' if has_audio else ''}"
+          f"{', dates reminder included' if has_dates else ''}")
     return True
 
 
 def _record(script: str, key: bytes, date_str: str, public_dir: Path,
-            dry_run: bool, doc: dict) -> bool:
-    """Speak the rundown, encrypt it, and never leave the MP3 in ./public."""
+            dry_run: bool, kind: str, rel: str, limit: float,
+            min_words: int, dry_secs: int) -> int | None:
+    """Speak a script, encrypt it, and never leave the MP3 in ./public.
+
+    Returns the clip's length in seconds, or None if it could not be made.
+    `kind` is bound into the encryption, so the rundown cannot be swapped
+    for the dates reminder or the other way round.
+    """
     import contextlib
     import io
     import subprocess
@@ -493,7 +598,7 @@ def _record(script: str, key: bytes, date_str: str, public_dir: Path,
     import tts
 
     with tempfile.TemporaryDirectory() as tmp:
-        mp3 = Path(tmp) / "rundown.mp3"
+        mp3 = Path(tmp) / "clip.mp3"
         # tts prints progress lines that are harmless, but swallow them
         # anyway: this module's contract is that it logs nothing it did not
         # write itself.
@@ -502,18 +607,19 @@ def _record(script: str, key: bytes, date_str: str, public_dir: Path,
             if dry_run and os.getenv("DRY_RUN_SILENT_AUDIO") == "1":
                 subprocess.run(
                     ["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi",
-                     "-i", "sine=frequency=330:sample_rate=24000", "-t", "20",
-                     "-ac", "1", "-b:a", "32k", str(mp3)], check=True)
+                     "-i", "sine=frequency=330:sample_rate=24000",
+                     "-t", str(dry_secs), "-ac", "1", "-b:a", "48k", str(mp3)],
+                    check=True)
             else:
                 with contextlib.redirect_stdout(sink):
-                    tts.synthesize(script, mp3)
+                    tts.synthesize(script, mp3, min_words=min_words)
             with contextlib.redirect_stdout(sink):
-                tts.fit_duration(mp3, RUNDOWN_LIMIT)
+                tts.fit_duration(mp3, limit)
         except Exception as exc:  # noqa: BLE001
-            print(f"  ! My Day: no spoken rundown today ({exc.__class__.__name__})")
-            return False
+            print(f"  ! My Day: no spoken {kind} clip today ({exc.__class__.__name__})")
+            return None
 
-        doc["audio_seconds"] = tts.duration_seconds(mp3)
-        blob = encrypt(key, mp3.read_bytes(), aad_for(date_str, "audio"))
-        (public_dir / AUDIO_FILE).write_bytes(blob)
-    return True
+        seconds = tts.duration_seconds(mp3)
+        (public_dir / rel).write_bytes(
+            encrypt(key, mp3.read_bytes(), aad_for(date_str, kind)))
+    return seconds

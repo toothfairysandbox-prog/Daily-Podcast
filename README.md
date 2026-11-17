@@ -37,34 +37,64 @@ so the repo never accumulates years of MP3 history. The site keeps the last
 
 ---
 
-## Topics
+## Topics, and how long the brief runs
 
 Six on the menu: **Markets, AI & Tech, Sports, Business, World** (geopolitics
 and global affairs) and **Science & Health**.
 
-Every topic is generated every weekday at two lengths:
+The listener picks any number of topics and sets a total with a slider, from
+two to five minutes. Every topic is recorded every weekday at **four lengths**
+(30 seconds, 1, 2 and 3 minutes), and the app assembles the brief from them:
 
-| cut | length | when it plays |
-|-----|--------|---------------|
-| short | ~45 s | the listener picked several topics; these get stitched |
-| long  | ~3 min | the listener picked this topic **on its own** |
+- every topic picked gets at least its 30-second version, so nothing chosen is
+  ever dropped;
+- the time left over goes to the day's biggest stories, using the `weight`
+  the model gives each topic. A quiet sports day stays at the headlines; a big
+  markets day gets the two-minute version;
+- the slider will not go below what the picks need, and a brief runs short
+  rather than padding when there is nothing more to say.
 
-So four topics is about three minutes, and one topic is also about three
-minutes — of that one thing. Breadth costs depth, deliberately. The cap is
-four.
-
-Both cuts come from a single model call per topic, so six topics cost six
-calls rather than twelve.
-
-### Holding the three-minute cap
+All four lengths come from a single model call per topic.
 
 The word limits in `segment_prompt.md` are sized for the voice's measured
 pace of about 152 words a minute. They are still only a request, so the build
-enforces the cap as well: `tts.fit_duration` speeds any cut that runs over
-its limit (45 seconds short, 180 long) just enough to fit, pitch preserved
-and capped at 1.15x. A cut needing more than that is reported in the log,
-because the script is too long. The picker shows the real total of what you
-have selected, added up from the day's actual audio.
+enforces them: `tts.fit_duration` speeds any cut that runs over its limit
+just enough to fit, pitch preserved and capped at 1.15x.
+
+## How the brief opens
+
+Before the news, each listener's brief can open with:
+
+- **The date** — "Good morning. It's Monday, November 30th." Recorded once a
+  day, the same for everyone.
+- **Weather** — now, the high and low, and the rest of the day. The build
+  cannot see where a phone is, so it records a forecast for each town in
+  `weather_places.txt` and the app plays the one nearest the listener (within
+  about 40 miles). On screen, the app shows the forecast for the phone's
+  exact position, whether or not a spoken one exists there. Forecasts are
+  written from the numbers by template, not by a model. Data is Open-Meteo,
+  which is free for non-commercial use.
+- **Birthdays and anniversaries** — any in the next week, from the owner's
+  calendar: events with "birthday" or "anniversary" in the title. This part
+  is private, so it is encrypted like My Day and only plays on the owner's
+  unlocked devices.
+
+Choices live on the listener's device and can be changed any time from the
+settings button; changes apply to the very next play.
+
+**For now, the personal parts are fully spoken only for the owner.** Other
+listeners get the date, weather near a listed town, and the news. Speaking
+each person's own weather and calendar needs a small server that voices a
+script on request; the app's saved preferences are already in the shape that
+server would store.
+
+## The voice
+
+Audio ships exactly as the speech service produces it (48 kbps). An earlier
+version re-compressed everything to 32 kbps to save space, which made the
+voice sound muffled and staticky; a cut is now re-encoded only if it has to
+be sped up to fit, once, at 64 kbps. The cost is size: about 14 MB a day, so
+the site keeps 14 days rather than 30.
 
 ### Adding or removing a topic
 
@@ -415,6 +445,7 @@ number handed to Claude comes from Stooq's daily close — which means the
 
 ```
 topics.py                       the topic menu ← add or remove topics here
+weather.py, weather_places.txt  spoken forecasts for the listed towns
 myday.py                        the encrypted calendar tab
 myday_prompt.md                 how the day plan is written
 build.py                        orchestrates one day, all topics, both lengths

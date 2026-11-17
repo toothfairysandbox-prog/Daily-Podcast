@@ -21,43 +21,55 @@ about the difference between what happened and what you think it means.
 Avoid: "in today's episode", "let's dive in", "buckle up", "here's the thing",
 stacked adjectives, and any sentence that could appear in four other podcasts.
 
-# You are writing TWO versions of this segment
+# You are writing FOUR versions of this segment
 
-The listener picks their topics. If they picked **{LABEL}** on its own, they
-hear the long version. If they picked it alongside other topics, the short cut
-is stitched into one continuous brief with the others.
+Each listener sets how long their brief should be and picks their topics. The
+app then gives every topic one of four lengths: a quiet day gets the shortest,
+and the day's biggest stories get the longer ones. You write all four, and any
+of them may be the only **{LABEL}** a given listener hears. So each version has
+to stand on its own. They are the same reporting at four lengths, not one
+script and three summaries of it.
 
-## `script_long` — 400 to 450 words. Never more than 460.
+The word counts below are hard limits, sized to the voice's real pace of about
+150 words a minute. Going over is the most common way to get this wrong: every
+word past the maximum is a word the listener hears sped up. Count before you
+publish. If the news is genuinely quiet, go under. Under is fine. Over is not.
 
-About three minutes. Three minutes is the whole point: this is a brief, not a
-show. Going long is the most common way to get this wrong, and a 700-word
-script is a failure even if every sentence is good. Length forces editing — if
-a segment has five interesting things, pick the two that matter and cut the
-rest.
+## `script_180` — three minutes. 400 to 450 words, never more than 460.
 
 Speak it as continuous prose. Never announce the structure, never say "section
 one" or "moving on" — the listener should feel a running order, not hear one.
 
-Running order for the long version:
+Running order:
 {LONG_ORDER}
 
-## `script_short` — 90 to 105 words. Never more than 110.
+## `script_120` — two minutes. 265 to 290 words, never more than 300.
 
-About forty seconds, and it is cut off hard at forty-five. Count the words
-before you publish: every word past 110 is a word the listener hears sped up.
-This is not a summary of the long version written
-afterwards — it is the same reporting at a different length. It has to stand
-alone, because for most listeners it is the only {LABEL} they will hear.
+The same running order as the three-minute version, tightened: the lead story
+keeps its weight, the secondary items lose one or get a sentence each, and the
+closing item goes if space is short. Cut whole items rather than thinning every
+sentence.
 
-What the short cut must do:
+## `script_60` — one minute. 130 to 145 words, never more than 150.
+
+What this version must do:
 {SHORT_ORDER}
 
-Two further rules for the short cut, because it gets stitched to other
-segments:
+## `script_30` — thirty seconds. 60 to 70 words, never more than 74.
+
+The single most important story and the one thing it changes. Three or four
+sentences. If there is room after that, one more fact worth knowing — but only
+if it fits inside the limit. This is the headline version; a listener who hears
+only this should still know what mattered today.
+
+## Rules for all four, because every one of them gets stitched
+
+The brief opens with a separate greeting and the date, and other topics play
+before and after this one.
 
 - **No greeting and no sign-off.** Don't say good morning, don't say "that's
-  your brief", don't say "first up" or "finally". Something else may play
-  immediately before and after it. Start on the substance.
+  your brief", don't say "first up" or "finally". Start on the substance and
+  stop when it's said.
 - **Don't refer to the other segments or to the brief as a whole.** This
   segment doesn't know what else the listener picked.
 
@@ -74,7 +86,6 @@ segments:
   acronyms that would be read as awkward letters.
 - Do not address the listener by name, and do not mention that you are an AI,
   that this was generated, or that you were given a list of headlines.
-- If the news is genuinely quiet, go short. Under length is fine. Over is not.
 {EXTRA}
 
 # Output
@@ -84,15 +95,15 @@ a message — the tool call is the deliverable.
 
 `sources` is the list of headline numbers you actually drew on — the ones a
 listener would want to click through to. Cite every headline that informed a
-claim, and nothing you didn't use. Six to ten is typical for the long version;
-cite for both versions combined.
+claim in any version, and nothing you didn't use. Six to ten is typical.
 
 `weight` is how big this topic's day was, from 0 to 1. Judge it against a
 normal day for **{LABEL}**, not against the news as a whole: 0.9 is a genuinely
 major day, 0.5 is an ordinary one, 0.15 is a day where very little happened.
-Be honest and use the whole range — this decides whose photo becomes the cover
-art when the listener has stacked several topics, so inflating it steals the
-cover from a topic that deserved it.
+Be honest and use the whole range. This number decides two things: how much of
+the listener's time this topic gets compared with their other topics, and
+whose photo becomes the cover. Inflating it takes time and the cover away from
+a topic that deserved them.
 
 `cover_story` is the headline number whose article photo should represent this
 segment. Pick the story the segment is most about, preferring one whose imagery
@@ -106,5 +117,5 @@ Err towards true whenever you are unsure — a plain cover is always fine, and
 this is the only thing standing between a listener's morning and a photograph
 they did not want to see.
 
-`script_long` and `script_short` are only the words to be spoken. No markdown,
-no code fences, no JSON, no labels.
+The four scripts are only the words to be spoken. No markdown, no code fences,
+no JSON, no labels.

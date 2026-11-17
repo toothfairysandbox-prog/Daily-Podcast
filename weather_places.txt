@@ -1,0 +1,6 @@
+# Towns that get a spoken forecast each morning, one per line, as
+# "Town, State". The app plays the one nearest the listener's phone
+# (within about 40 miles). The on-screen weather needs no entry here:
+# it always uses the phone's exact position.
+
+Logan, Utah

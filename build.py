@@ -42,6 +42,7 @@ from xml.sax.saxutils import escape
 import cover
 import myday
 import sources
+import weather
 import topics as topics_cfg
 import tts
 
@@ -50,7 +51,7 @@ WEB = ROOT / "web"
 PUBLIC = Path(os.getenv("PUBLIC_DIR", ROOT / "public"))
 
 MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-5")
-RETAIN = int(os.getenv("RETAIN_EPISODES", "30"))
+RETAIN = int(os.getenv("RETAIN_EPISODES", "14"))
 SHOW_TITLE = os.getenv("SHOW_TITLE", "What's Up?")
 SHOW_DESC = os.getenv(
     "SHOW_DESCRIPTION",
@@ -64,15 +65,28 @@ SHOW_AUTHOR = os.getenv("SHOW_AUTHOR", "What's Up?")
 # keeps the whole batch inside about ninety seconds anyway.
 TTS_WORKERS = int(os.getenv("TTS_WORKERS", "4"))
 
-# The longest each cut may run, in seconds. Four short cuts is the largest
-# brief a listener can assemble, so 4 x 45 is what makes "never longer than
-# three minutes" true rather than aspirational.
-CUT_LIMITS = {"short": 45.0, "long": 180.0}
+# Every topic is recorded at four lengths, named by their nominal seconds.
+# The listener sets a total with a slider and the app assembles the brief
+# from these: every chosen topic gets at least its shortest cut, and the
+# spare time goes to the day's biggest stories. See pickCuts() in the app.
+CUTS = ("30", "60", "120", "180")
+
+# The longest each cut may actually run. tts.fit_duration enforces these, so
+# the app's arithmetic can trust that a "60" is about a minute.
+CUT_LIMITS = {"30": 31.0, "60": 62.0, "120": 123.0, "180": 180.0}
+
+# Fewest words for a cut to count as a real script rather than a stub.
+CUT_MIN_WORDS = {"30": 30, "60": 60, "120": 130, "180": 150}
+# Past these the cut will need speeding up to fit; worth a line in the log.
+CUT_WARN_WORDS = {"30": 80, "60": 158, "120": 312, "180": 480}
+
+# What the length slider offers, in seconds.
+LENGTHS = {"min": 120, "max": 300, "step": 30, "default": 180}
 
 # episodes.json schema version. The player checks this, so an old home-screen
 # app that hasn't refreshed its shell shows a "reload" prompt rather than
 # silently rendering an empty archive.
-SCHEMA = 2
+SCHEMA = 3
 
 _print_lock = Lock()
 
@@ -198,21 +212,25 @@ SEGMENT_TOOL = {
                     "numbered list you were given. Six to ten is typical."
                 ),
             },
-            "script_long": {
+            "script_180": {
                 "type": "string",
                 "description": (
-                    "The ~3-minute version, 400-450 words, hard maximum 460. "
-                    "Plain spoken prose only: no markdown, no headers, no "
-                    "bullets, no stage directions."
+                    "The three-minute version, 400-450 words, hard maximum "
+                    "460. Plain spoken prose only: no markdown, no headers, "
+                    "no bullets, no stage directions."
                 ),
             },
-            "script_short": {
+            "script_120": {
                 "type": "string",
-                "description": (
-                    "The ~40-second cut, 90-105 words, hard maximum 110. "
-                    "No greeting, no sign-off, no reference to other segments "
-                    "-- it gets stitched between them. Plain spoken prose only."
-                ),
+                "description": "The two-minute version, 265-290 words, hard maximum 300.",
+            },
+            "script_60": {
+                "type": "string",
+                "description": "The one-minute version, 130-145 words, hard maximum 150.",
+            },
+            "script_30": {
+                "type": "string",
+                "description": "The thirty-second headline version, 60-70 words, hard maximum 74.",
             },
             "weight": {
                 "type": "number",
@@ -238,8 +256,9 @@ SEGMENT_TOOL = {
                 ),
             },
         },
-        "required": ["title", "teaser", "tags", "sources", "script_long",
-                     "script_short", "weight", "cover_story",
+        "required": ["title", "teaser", "tags", "sources", "script_180",
+                     "script_120", "script_60", "script_30", "weight",
+                     "cover_story",
                      "cover_is_sensitive"],
     },
 }
@@ -309,12 +328,9 @@ def as_list(value) -> list:
 
 def normalize_segment(data: dict) -> dict:
     """Coerce a tool payload into the shape the rest of the build wants."""
-    long_script = (data.get("script_long") or "").strip()
-    short_script = (data.get("script_short") or "").strip()
-    if not long_script:
-        raise RuntimeError("segment came back with no long script")
-    if not short_script:
-        raise RuntimeError("segment came back with no short script")
+    scripts = {cut: str(data.get(f"script_{cut}") or "").strip() for cut in CUTS}
+    if not any(scripts.values()):
+        raise RuntimeError("segment came back with no scripts at all")
 
     cited = []
     for n in as_list(data.get("sources")):
@@ -345,8 +361,7 @@ def normalize_segment(data: dict) -> dict:
         "weight": weight,
         "cover_story": cover_story,
         "cover_is_sensitive": bool(data.get("cover_is_sensitive")),
-        "script_long": long_script,
-        "script_short": short_script,
+        "scripts": scripts,
     }
 
 
@@ -409,27 +424,26 @@ def build_topic(topic, date_str: str, date_label: str,
     print(f"[{topic.slug}] writing with {MODEL} ...")
     t0 = time.monotonic()
     seg = write_segment(topic, context, date_label)
-    long_words = len(seg["script_long"].split())
-    short_words = len(seg["script_short"].split())
-    print(f'[{topic.slug}] "{seg["title"]}" '
-          f'({long_words}w long / {short_words}w short, '
-          f'weight {seg["weight"]:.2f}, {time.monotonic() - t0:.0f}s)')
+    words = {cut: len(text.split()) for cut, text in seg["scripts"].items()}
+    print(f'[{topic.slug}] "{seg["title"]}" ('
+          + " / ".join(f"{words[c]}w@{c}s" for c in CUTS)
+          + f', weight {seg["weight"]:.2f}, {time.monotonic() - t0:.0f}s)')
 
-    if long_words < 150:
-        print(f"[{topic.slug}] SKIPPED: long script came back at only "
-              f"{long_words} words; refusing to publish a broken segment "
-              f"over yesterday's good one.")
+    # A cut that came back as a stub is dropped on its own; the topic only
+    # goes if it has nothing short enough to stitch. A topic that can only be
+    # played at three minutes would break every brief it was picked for.
+    for cut in CUTS:
+        if words[cut] < CUT_MIN_WORDS[cut]:
+            print(f"[{topic.slug}] ! the {cut}s cut came back at only "
+                  f"{words[cut]} words and is dropped")
+            del seg["scripts"][cut]
+        elif words[cut] > CUT_WARN_WORDS[cut]:
+            print(f"[{topic.slug}] ! the {cut}s cut ran to {words[cut]} words "
+                  f"and will need speeding up to fit")
+    if not any(c in seg["scripts"] for c in ("30", "60")):
+        print(f"[{topic.slug}] SKIPPED: neither short cut is usable; refusing "
+              f"to publish a topic that cannot be stitched.")
         return None
-    if short_words < 50:
-        print(f"[{topic.slug}] SKIPPED: short cut came back at only "
-              f"{short_words} words.")
-        return None
-    if long_words > 480:
-        print(f"[{topic.slug}] ! long ran to {long_words} words -- tighten "
-              f"long_order in topics.py if this keeps happening")
-    if short_words > 118:
-        print(f"[{topic.slug}] ! short cut ran to {short_words} words, which "
-              f"will need speeding up to fit its 45 seconds")
 
     seg["slug"] = topic.slug
     seg["label"] = topic.label
@@ -615,7 +629,8 @@ def check_feeds() -> int:
               "feeds in topics.py.")
     else:
         print("Every topic has enough material.")
-    return worst
+    print()
+    return worst | weather.check()
 
 
 # --------------------------------------------------------------------------
@@ -695,12 +710,11 @@ def main() -> int:
                 "cover": {"type": "generated",
                           "url": f"covers/{date_str}-{t.slug}.png",
                           "credit": "", "link": "", "story": ""},
-                "script_long": (
-                    f"This is a dry run of the {t.label} segment. No news was "
-                    "fetched and no model was called. " * 8),
-                "script_short": (
-                    f"This is the short {t.label} cut. No news was fetched and "
-                    "no model was called. " * 3),
+                "scripts": {
+                    cut: (f"This is the {cut} second {t.label} cut of a dry "
+                          "run. No news was fetched and no model was called. "
+                          * (2 + int(cut) // 20))
+                    for cut in CUTS},
             }
             cover.generate_cover(PUBLIC / f"covers/{date_str}-{t.slug}.png",
                                  t, date_str, None)
@@ -742,73 +756,114 @@ def main() -> int:
     if skipped:
         print(f"\n! skipped: {', '.join(skipped)}")
 
+    # --- the spoken date and weather ---------------------------------------
+    # Small clips that open the brief. They are the same for everyone (the
+    # date) or for everyone near a listed town (the weather), so they are
+    # recorded once here; the app plays the right ones for each listener.
+    nice = datetime.strptime(date_str, "%Y-%m-%d")
+    day_n = nice.day
+    ordinal = "th" if 11 <= day_n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(day_n % 10, "th")
+    date_text = f"Good morning. It's {nice.strftime('%A, %B')} {day_n}{ordinal}."
+    intro = {"date": {"text": date_text}}
+
+    print("\nWeather...")
+    reports = weather.build_reports(dry_run=args.dry_run)
+
     # --- audio -----------------------------------------------------------
-    jobs: list[tuple[str, str, str, Path]] = []
+    # One list of jobs for everything that needs a voice. Each names where
+    # its result goes, so the pool below does not care what it is recording.
+    jobs: list[dict] = []
     for slug, seg in segments.items():
-        for cut in ("short", "long"):
-            rel = f"audio/{date_str}/{slug}-{cut}.mp3"
-            jobs.append((slug, cut, rel, PUBLIC / rel))
+        for cut in CUTS:
+            if cut not in seg["scripts"]:
+                continue
+            jobs.append({
+                "label": f"{slug}/{cut}", "text": seg["scripts"][cut],
+                "rel": f"audio/{date_str}/{slug}-{cut}.mp3",
+                "limit": CUT_LIMITS[cut], "min_words": 20, "dry_secs": int(cut),
+                "into": seg.setdefault("cuts", {}), "key": cut,
+            })
+    jobs.append({
+        "label": "intro/date", "text": date_text,
+        "rel": f"audio/{date_str}/intro-date.mp3",
+        "limit": 8.0, "min_words": 3, "dry_secs": 3,
+        "into": intro["date"], "key": None,
+    })
+    for report in reports:
+        jobs.append({
+            "label": f"weather/{report['slug']}", "text": report["text"],
+            "rel": f"audio/{date_str}/weather-{report['slug']}.mp3",
+            "limit": 40.0, "min_words": 8, "dry_secs": 15,
+            "into": report, "key": None,
+        })
 
     if not args.skip_audio:
         print(f"\nGenerating {len(jobs)} audio files "
               f"({TTS_WORKERS} at a time)...\n")
 
-        def one(slug: str, cut: str, path: Path):
-            text = segments[slug][f"script_{cut}"]
+        def one(job: dict):
+            path = PUBLIC / job["rel"]
             if args.dry_run and os.getenv("DRY_RUN_SILENT_AUDIO") == "1":
                 import subprocess
                 path.parent.mkdir(parents=True, exist_ok=True)
                 subprocess.run(
                     ["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi",
                      "-i", "anullsrc=r=24000:cl=mono",
-                     "-t", "45" if cut == "short" else "180",
-                     "-b:a", "32k", str(path)], check=True)
+                     "-t", str(job["dry_secs"]),
+                     "-b:a", "48k", str(path)], check=True)
             else:
-                tts.synthesize(text, path)
+                tts.synthesize(job["text"], path, min_words=job["min_words"])
             # The word limits ask; this enforces. See tts.fit_duration.
-            tts.fit_duration(path, CUT_LIMITS[cut])
+            tts.fit_duration(path, job["limit"])
             return tts.duration_seconds(path), path.stat().st_size
 
         with ThreadPoolExecutor(max_workers=TTS_WORKERS) as pool:
-            futures = {
-                pool.submit(captured, one, slug, cut, path): (slug, cut, rel)
-                for slug, cut, rel, path in jobs
-            }
+            futures = {pool.submit(captured, one, job): job for job in jobs}
             for fut in as_completed(futures):
-                slug, cut, rel = futures[fut]
+                job = futures[fut]
                 result, log, err = fut.result()
                 if err:
-                    say(f"[{slug}/{cut}] AUDIO FAILED: "
+                    say(f"[{job['label']}] AUDIO FAILED: "
                         f"{err.__class__.__name__}: {err}\n{log.rstrip()}")
                     continue
                 duration, size = result
                 mins, secs = divmod(duration, 60)
-                say(f"[{slug}/{cut}] {mins}:{secs:02d}, "
-                    f"{size / 1024:.0f} KB")
-                segments[slug].setdefault("cuts", {})[cut] = {
-                    "audio": rel, "duration": duration, "bytes": size,
-                }
+                say(f"[{job['label']}] {mins}:{secs:02d}, {size / 1024:.0f} KB")
+                made = {"audio": job["rel"], "duration": duration, "bytes": size}
+                if job["key"] is None:
+                    job["into"].update(made)
+                else:
+                    job["into"][job["key"]] = made
 
-    # A segment with no playable short cut cannot be stitched, and one with no
-    # long cut cannot be played solo. Drop anything that lost both rather than
-    # publishing a topic the player will fail on.
+    # A topic needs a short cut to be stitched. If the audio for both short
+    # cuts failed, drop the topic rather than publish one the player cannot
+    # fit into a brief.
     for slug in list(segments):
         cuts = segments[slug].get("cuts") or {}
-        if not args.skip_audio and not cuts:
-            print(f"  ! {slug}: no audio at all, dropping from today's brief")
+        if not args.skip_audio and not any(c in cuts for c in ("30", "60")):
+            print(f"  ! {slug}: no short cut was recorded, dropping from today's brief")
             del segments[slug]
     if not segments:
         print("\nERROR: every segment lost its audio; refusing to publish.",
               file=sys.stderr)
         return 1
 
+    # Only what was actually recorded is published. A forecast with no audio
+    # would be offered by the app and then fail to play.
+    weather_out = [{k: r[k] for k in ("slug", "name", "region", "lat", "lon",
+                                      "text", "now", "high", "low", "cond",
+                                      "audio", "duration")}
+                   for r in reports if r.get("audio")]
+    if not intro["date"].get("audio"):
+        intro = {}
+
     # --- transcripts -----------------------------------------------------
     tdir = PUBLIC / "transcripts" / date_str
     tdir.mkdir(parents=True, exist_ok=True)
     for slug, seg in segments.items():
-        for cut in ("short", "long"):
+        for cut, text in seg["scripts"].items():
             rel = f"transcripts/{date_str}/{slug}-{cut}.txt"
-            (PUBLIC / rel).write_text(seg[f"script_{cut}"], encoding="utf-8")
+            (PUBLIC / rel).write_text(text, encoding="utf-8")
             if (seg.get("cuts") or {}).get(cut):
                 seg["cuts"][cut]["transcript"] = rel
 
@@ -825,14 +880,19 @@ def main() -> int:
             "weight": seg["weight"],
             "cover": seg.get("cover"),
             "sources": seg.get("sources", []),
-            "short": cuts.get("short"),
-            "long": cuts.get("long"),
+            "cuts": {c: cuts[c] for c in CUTS if c in cuts},
+            # The names the previous app version reads. Kept so a phone still
+            # running its cached shell plays normally until it refreshes.
+            "short": cuts.get("30") or cuts.get("60"),
+            "long": next((cuts[c] for c in reversed(CUTS) if c in cuts), None),
         }
 
     episode = {
         "date": date_str,
         "published": now.isoformat(),
         "segments": published_segments,
+        "intro": intro,
+        "weather": {"nearby_km": weather.NEARBY_KM, "places": weather_out},
     }
 
     # Backwards compatibility for a home-screen app still running the old
@@ -873,7 +933,9 @@ def main() -> int:
         json.dumps(
             {"show": SHOW_TITLE, "description": SHOW_DESC,
              "schema": SCHEMA,
-             "maxSelection": topics_cfg.MAX_SELECTION,
+             "maxSelection": len(topics_cfg.TOPICS),
+             "cuts": list(CUTS),
+             "lengths": LENGTHS,
              "menu": topics_cfg.menu(),
              "updated": now.isoformat(),
              "episodes": episodes},
@@ -881,8 +943,7 @@ def main() -> int:
         ),
         encoding="utf-8",
     )
-    total_cuts = sum(len([c for c in (s["short"], s["long"]) if c])
-                     for s in published_segments.values())
+    total_cuts = sum(len(s["cuts"]) for s in published_segments.values())
     print(f"  + episodes.json ({len(episodes)} days, "
           f"{len(published_segments)} segments today, {total_cuts} cuts)")
 
