@@ -1,0 +1,3 @@
+Anthropic's IPO was the biggest on record — eighty three dollars a share, nearly a hundred and five billion dollar valuation, with its seven founders personally cashing out close to two billion dollars combined. But global markets slumped anyway, extending a broader AI sell-off the listing was supposed to calm. Investors clearly still want frontier AI exposure, they're just pricing in real doubt about the spending behind it.
+
+Meanwhile Nvidia's stock is down nearly forty percent from its October peak, and California's attorney general has subpoenaed the company over ousted CEO Jensen Huang's ties to China. Apple, separately, is reportedly building its own AI agent to compete with Meta's Muse and Anthropic's Claude.

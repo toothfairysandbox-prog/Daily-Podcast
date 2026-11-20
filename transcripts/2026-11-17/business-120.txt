@@ -1,0 +1,7 @@
+Nvidia's board says flatly it is not considering reinstating Jensen Huang as chief executive, despite its own earlier letter warning of "irreplaceable" talent loss, pressure from billionaire allies, and Donald Trump publicly backing the push to bring him back. The real issue underneath: inquiries into Huang's relationship with a woman suspected of working with Chinese intelligence are still proceeding, which is likely why the board won't move. Interim chief Colette Kress now has to handle Nvidia's first earnings call without him, with investors watching for signs of disarray.
+
+Separately, Chase and Wells Fargo customers were locked out of their accounts Monday after a software bug Chase says wasn't systemic or cyber-related — the second tech failure in days after Microsoft and the FAA outages grounded flights nationwide. Airlines are now tallying the cost of that ground stop, more than twenty thousand flights canceled. Quebecor has also made a twenty-two billion dollar bid for Telus, aiming to build a pan-Canadian telecom company, and California's attorney general is suing OpenAI over an attack involving Hugging Face.
+
+The common thread: systems everyone assumed were solid — airlines, banks, corporate leadership — are all showing cracks at once. Worth watching whether the outages trace back to one shared cause.
+
+Disney reports earnings today, its first since company-wide layoffs.

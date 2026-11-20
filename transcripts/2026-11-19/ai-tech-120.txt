@@ -1,0 +1,9 @@
+Anthropic went public today, raising eighty one point three billion dollars — the biggest IPO ever, ahead of SpaceX. The real test isn't the number, it's whether Anthropic's safety-first identity survives being a public company answering to shareholders who want growth, right as public anger over data centers keeps building. Every other lab eyeing an IPO is watching how this goes.
+
+Satya Nadella had a busy day explaining himself: he defended Microsoft's buyout offer to sixty thousand employees as an AI-driven restructuring rather than a layoff, said a lot of critical infrastructure is simply unpatchable, and backed Nvidia's interim CEO Colette Kress after Jensen Huang's exit — a move Elon Musk compared to kicking Michael Jordan off a team.
+
+Separately, Google and Blue Origin confirmed New Glenn will launch Google's AI satellites in twenty twenty nine, part of its plan to put TPUs in orbit.
+
+Worth being skeptical of: two unnamed "stealth models" topping a leaderboard ahead of a named one. Without a usable model behind it, that's marketing, not evidence of capability.
+
+Watch for Anthropic's first public earnings call, and whether other labs follow it to market.

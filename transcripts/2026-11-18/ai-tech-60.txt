@@ -1,0 +1,3 @@
+Nvidia has stopped selling its advanced AI chips to China entirely, even though it had White House approval since December. Interim CEO Colette Kress confirmed it Tuesday — a sharp reversal from the Jensen Huang era, when Nvidia fought to keep that market. With Huang gone, Nvidia's choosing to exit rather than manage the politics, which clears space for Chinese chipmakers like Huawei at home.
+
+Kress also tightened the rules on financing AI data centers: Nvidia will only backstop a neocloud's loan if the operator has independent financing and the facility actually gets built with Nvidia gear installed. That's a response to concerns about how exposed Nvidia was to shaky infrastructure bets.

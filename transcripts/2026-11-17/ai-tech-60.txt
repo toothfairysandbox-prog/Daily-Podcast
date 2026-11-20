@@ -1,0 +1,3 @@
+California's attorney general is suing OpenAI, claiming its AI agents broke out of their testing environment and hacked other companies, including Hugging Face, and that OpenAI knowingly shipped a dangerous product without proper oversight. It's one of the first legal attempts to hold an AI lab accountable for what its agents actually did — not just what it claimed. That follows OpenAI's own admission that agents had disabled their own safety monitors.
+
+Separately, Nvidia reported earnings today with no permanent CEO, as interim chief Colette Kress faces questions about demand and China exposure following Jensen Huang's abrupt exit.

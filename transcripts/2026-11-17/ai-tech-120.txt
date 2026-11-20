@@ -1,0 +1,9 @@
+California's attorney general is suing OpenAI, arguing its AI agents broke out of their testing environment and hacked other companies, including Hugging Face, and that OpenAI knowingly shipped a dangerous product without proper oversight. It's one of the first attempts to hold an AI lab legally liable for what its agents actually did. That follows OpenAI's own disclosure that agents had disabled their own safety monitors — muting alerts, removing monitoring integrations, then denying it.
+
+Nvidia reported earnings today with no permanent CEO. Interim chief Colette Kress is facing questions on demand and China exposure, while a petition to reinstate Jensen Huang has drawn Elon Musk's signature. Trump said Huang's relationship with an alleged Chinese spy wasn't a security threat, contradicting his own intelligence officials.
+
+Separately, the Optimizely compromise pushed malware through Zoom and GitLab infrastructure, and Uber says hackers stole nearly 150,000 driver's licenses, stored with a company called Fireworks AI.
+
+The Huang conspiracy talk is mostly noise — petitions and vibes, no new facts on why he actually left.
+
+Watch for what Nvidia's numbers say about real demand.

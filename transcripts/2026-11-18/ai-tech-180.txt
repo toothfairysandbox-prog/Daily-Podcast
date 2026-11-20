@@ -1,0 +1,9 @@
+Nvidia has stopped selling its advanced AI chips to China entirely, even though the White House cleared the company to do so back in December. Interim CEO Colette Kress confirmed it on Tuesday's earnings call. This is a real reversal: under Jensen Huang, Nvidia fought hard to keep a foothold in the Chinese market despite export restrictions. With Huang out, the company is choosing to walk away rather than navigate the politics, which tells you how much the China relationship depended on him personally. It also reshapes competition there — Chinese chipmakers like Huawei get a clearer runway at home, and Nvidia is betting it can absorb the revenue hit everywhere else.
+
+On that same call, Kress tried to reassure investors that revenue growth isn't slowing despite the leadership chaos, and she clarified the rules for Nvidia's data center financing: the company will only backstop a neocloud's loan if that operator already has independent financing and actually gets the facility built with Nvidia hardware installed. That's Nvidia tightening risk controls after getting criticized for how exposed it was to shaky AI infrastructure bets. Separately, Nvidia's venture stakes have ballooned to 65 billion dollars, nearly tripling in nine months — but with Huang gone, it's unclear who keeps making those deals.
+
+Meanwhile, a petition to reinstate Huang has passed 115,000 signatures, including Elon Musk, framed around open-source AI concerns — worth noting, but petitions aren't leverage in a boardroom.
+
+One to watch skeptically: the "385 times more efficient inference" claim going around Hacker News about energy-based reasoners. Efficiency claims like this usually hold on narrow benchmarks and fall apart at scale, so treat it as promising research, not a shipped breakthrough yet.
+
+Watch for how Nvidia's China exit shows up in next quarter's numbers, and whether any permanent CEO pick changes the neocloud financing stance Kress just laid out.
