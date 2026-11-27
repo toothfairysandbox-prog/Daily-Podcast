@@ -1,0 +1,7 @@
+Anthropic's IPO was the biggest on record, pricing at eighty three dollars a share and valuing the company near a hundred and five billion dollars. Its seven founders personally cashed out close to two billion dollars combined. Yet global markets slumped anyway — the listing didn't stop a broader AI sell-off, which tells you investors are still skeptical about whether frontier AI spending pays off, even as they chase the biggest names.
+
+Nvidia had the opposite kind of week. The stock sits nearly forty percent below its October peak, and California's attorney general has subpoenaed the company over ousted CEO Jensen Huang's ties to China, calling it "bright red flags" for investors. New reporting also describes Huang's management style as built on fear.
+
+Apple is reportedly building its own AI agent to compete with Meta's Muse and Anthropic's Claude, hiring an engineer to lead an assistant that browses, works across apps, and writes code. Signal is moving the opposite direction, now blocking Gemini and Siri from reading on-screen content to protect message privacy from agentic AI.
+
+Watch Nvidia's next earnings call and any findings from California's subpoena — both will shape whether this slump is a correction or something deeper.

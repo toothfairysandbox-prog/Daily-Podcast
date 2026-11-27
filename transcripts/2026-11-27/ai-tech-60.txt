@@ -1,0 +1,3 @@
+Nvidia has paused server shipments to Malaysia, Singapore, Thailand, and Indonesia, officially to stop AI chips reaching China through transshipment routes. The timing is awkward because Nvidia is also tangled in an unproven spy scandal involving a former Megaspeed executive who had an affair with CEO Jensen Huang — making the clampdown look as much political as procedural. Either way, deployment timelines in that region just got shakier.
+
+Separately, an AI agent completed what's being called the UK's first fully cardless purchase, buying a pizza on its own through a bank-to-bank payment rail — a small but real step toward agents handling actual money, not just information.

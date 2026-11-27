@@ -1,0 +1,3 @@
+S&P is considering downgrading Nvidia's credit rating over governance and "key man" risk — concern that the company is too tied to Jensen Huang personally, sharpened by reports he broke Nvidia's own code of conduct. For the company anchoring the AI boom's valuation, that's rating agencies pricing in leadership risk, not just demand for chips.
+
+Separately, OpenAI is merging its Chat and Work products into one usage meter, so heavy ChatGPT users should expect to hit limits sooner — a sign compute is getting rationed even at the top.

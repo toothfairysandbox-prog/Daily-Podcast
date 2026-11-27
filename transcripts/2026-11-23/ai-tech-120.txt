@@ -1,0 +1,7 @@
+Nvidia's board has reinstated Jensen Huang as chief executive, a little more than a week after he resigned amid allegations of affairs, including with a direct report. The board said it was unanimous, citing satisfaction with his candor and ability to lead. Reporting says senior US government officials supported the reversal. The real story is the instability: the world's most valuable company spent over a week without settled leadership while every major AI player is racing on chip supply, and the board clearly decided it couldn't risk finding out what Nvidia looks like without Huang running it.
+
+Elsewhere, Sierra, the enterprise AI customer experience company co-founded by Bret Taylor, raised one point seven five billion dollars, doubling its valuation to thirty billion in six months, a sign AI customer service is landing real enterprise money. And three early Anthropic backers, Notable Capital, GIC, and Baillie Gifford, are now talking publicly about their bets ahead of its IPO, suggesting that offering is getting close.
+
+OpenAI's chief scientist raised the idea of a speed limit on AI development this week. Worth noting, but the piece itself concedes nobody agrees how to measure the speed in the first place.
+
+Watch whether Nvidia's customer contracts show any lasting effect from the leadership scare this week.

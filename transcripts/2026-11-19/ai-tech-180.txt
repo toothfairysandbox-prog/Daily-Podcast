@@ -1,0 +1,9 @@
+Anthropic went public today, raising eighty one point three billion dollars, the biggest IPO ever, bigger than SpaceX's debut. That's the headline number. The real story is what happens next to the identity the company sold itself on. Anthropic built its brand on being the safety-conscious lab, the one that would slow down if the technology got dangerous. Now it answers to shareholders who want growth, and it's doing so while public anger over data center buildouts keeps rising. Wired is blunt about it: Anthropic's biggest threat heading into this might be itself, not OpenAI or Google. Every other AI lab weighing its own public debut is watching how this plays out.
+
+A few other things worth knowing. Satya Nadella spent Wednesday explaining himself on multiple fronts. He defended asking sixty thousand Microsoft employees to take buyouts rather than face layoffs, and he says it's about reshaping the workforce around AI, not just cutting costs. He also said a lot of critical infrastructure is simply unpatchable, which is a strange thing for a Microsoft CEO to say out loud right after an Outlook outage. And he backed Nvidia's interim chief Colette Kress following Jensen Huang's exit, a story Elon Musk weighed in on too, comparing ousting Huang to kicking Michael Jordan off a team.
+
+Separately, Google and Blue Origin announced New Glenn will launch Google's AI server satellites in twenty twenty nine, part of Google's long-shot plan to put TPU-equipped satellites in orbit.
+
+The thing to be skeptical of: two unnamed "stealth models" showing up on a leaderboard ahead of an existing one. Leaderboard rankings on unreleased, unverified models tell you almost nothing about real capability — treat it as marketing until there's a model you can actually use.
+
+Watch Anthropic's first earnings call as a public company, and watch whether other labs follow it to market now that the price of admission has been set this high.

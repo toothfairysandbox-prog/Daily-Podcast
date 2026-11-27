@@ -1,0 +1,3 @@
+Jensen Huang is back as Nvidia's chief executive, less than two weeks after resigning over an affair with an alleged Chinese spy. The Wall Street Journal reports he told the board there were more affairs than previously known. He still got a hero's welcome at headquarters, and Trump and Elon Musk both backed the reinstatement, while politicians on both sides call it reckless. Megaspeed, the company at the center of the scandal, is reportedly headed for a US blacklist.
+
+Separately, Amazon disclosed hackers used an AI agent framework to find and exploit a zero-day vulnerability with almost no human help — a sign attackers are catching up on agentic tools.

@@ -1,0 +1,7 @@
+S&P is weighing a credit downgrade for Nvidia, citing governance and "key man" risk — the company's fortunes tied too closely to Jensen Huang. That lands right after reports that Huang himself broke Nvidia's own code of conduct. For the company anchoring the entire AI boom's valuation, even a one-notch cut to AA-minus signals rating agencies pricing in leadership risk, not just chip demand.
+
+A few other things worth knowing. OpenAI is merging Chat and Work into one usage meter, meaning heavy ChatGPT users will hit limits sooner — a quiet sign compute is getting rationed even at the top. The FCC approved SpaceX's plan to put AI data centers in orbit, dismissing research-interference concerns as outside its authority. And Anthropic's Dario Amodei pushed back on accusations he's comfortable ceding control to AI, even as his own company automates more of its research.
+
+The Character.AI story — forty-two state attorneys general trying to block a sale of user chat data — sounds dramatic but is mostly bankruptcy procedure. The company's in Chapter 11; this is standard consumer-protection intervention in a distressed-asset sale, not a special rescue. The real story is the collapse itself.
+
+Watch how S&P actually rules on Nvidia — that will tell you if Wall Street sees a real succession problem there.

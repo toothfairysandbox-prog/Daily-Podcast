@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>What's Up?</title>
+<meta name="description" content="Your morning in three minutes: the news you picked, and your day.">
+<meta name="theme-color" content="#08090b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="What's Up?">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preload" as="image" href="splash.webp" type="image/webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#08090b; --line:rgba(255,255,255,.07); --line-hi:rgba(255,255,255,.13);
+    --text:#f4f5f7; --muted:#8a8f98; --dim:#5c626c;
+    --accent:#7c6cf6; --accent-2:#4b9dfb;
+    --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+    --ease:cubic-bezier(.22,.8,.3,1);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{background:var(--bg);scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-size:16px;line-height:1.55;letter-spacing:-.011em;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y:none;-webkit-overflow-scrolling:touch;
+  }
+  #glow{position:fixed;inset:0 0 auto 0;height:70vh;pointer-events:none;z-index:0;
+    background:radial-gradient(120% 70% at 50% 0%, var(--tint,rgba(124,108,246,.22)), transparent 70%);
+    transition:background .8s var(--ease)}
+  .wrap{position:relative;z-index:1;max-width:620px;margin:0 auto;
+    padding:calc(var(--safe-t) + 16px) 20px calc(var(--safe-b) + 64px);
+    transition:opacity .55s var(--ease),transform .7s var(--ease)}
+  /* held back until the intro hands over, then eased up into place */
+  body:not(.revealed) .wrap{opacity:0;transform:translateY(14px)}
+
+  /* ---------- intro ---------- */
+  #splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;
+    background:var(--bg);transition:opacity .5s var(--ease);
+    /* if the script never runs, do not trap the listener behind the intro */
+    animation:splashFailsafe .01s 4s forwards}
+  @keyframes splashFailsafe{to{opacity:0;visibility:hidden;pointer-events:none}}
+  #splash::before{content:"";position:absolute;inset:0;opacity:0;transform:scale(.7);
+    background:radial-gradient(60% 40% at 50% 50%,rgba(124,108,246,.32),transparent 70%);
+    transition:opacity .9s var(--ease),transform 1.7s var(--ease)}
+  #splash img{position:relative;width:min(78vw,380px);height:auto;opacity:0;
+    transform:translateY(18px) scale(.84);
+    filter:blur(12px) drop-shadow(0 22px 44px rgba(124,108,246,.5));
+    transition:opacity .6s var(--ease),transform 1.3s var(--ease),filter .7s var(--ease)}
+  #splash.in::before{opacity:1;transform:scale(1.15)}
+  #splash.in img{opacity:1;transform:none;
+    filter:blur(0) drop-shadow(0 22px 44px rgba(124,108,246,.5))}
+  #splash.out{opacity:0;pointer-events:none}
+  #splash.out img{transform:translateY(-12px) scale(1.08);
+    filter:blur(6px) drop-shadow(0 22px 44px rgba(124,108,246,.5));
+    transition:transform .5s var(--ease),filter .5s var(--ease)}
+
+  /* ---------- tabs ---------- */
+  .tabs{position:relative;display:grid;grid-template-columns:1fr 1fr;padding:3px;
+    border-radius:12px;background:rgba(255,255,255,.045);border:1px solid var(--line);
+    margin-bottom:22px}
+  .tab{position:relative;z-index:1;padding:8px 6px;font-size:13.5px;font-weight:550;
+    color:var(--muted);border-radius:9px;transition:color .2s var(--ease)}
+  .tab.on{color:var(--text)}
+  .tab-pill{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);
+    border-radius:9px;background:rgba(255,255,255,.09);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07);
+    transition:transform .34s var(--ease)}
+  body[data-tab="day"] .tab-pill{transform:translateX(100%)}
+  body[data-tab="day"] #app, body[data-tab="day"] #newsFoot,
+  body[data-tab="day"] #edit, body[data-tab="day"] .mini{display:none!important}
+  body:not([data-tab="day"]) #day{display:none}
+
+  /* ---------- my day ---------- */
+  #day{animation:fade .35s var(--ease)}
+  .day-date{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent);margin:6px 0 10px}
+  .day-over{font-size:19px;line-height:1.42;font-weight:500;letter-spacing:-.02em;
+    margin:0 0 18px;text-wrap:pretty}
+  .day-stale{font-size:12.5px;color:#e7b76a;border:1px solid rgba(231,183,106,.28);
+    background:rgba(231,183,106,.08);border-radius:10px;padding:9px 12px;margin:0 0 16px}
+  .rundown{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    padding:10px 14px 10px 10px;border-radius:14px;border:1px solid var(--line);
+    background:rgba(255,255,255,.03);position:relative;overflow:hidden;margin-bottom:18px;
+    transition:border-color .18s var(--ease),background .18s var(--ease)}
+  .rundown:hover{border-color:var(--line-hi);background:rgba(255,255,255,.05)}
+  .rundown[disabled]{opacity:.5;cursor:default}
+  .rundown-btn{width:38px;height:38px;border-radius:50%;background:var(--text);color:#0b0c0f;
+    display:grid;place-items:center;flex:none}
+  .rundown-btn svg{width:15px;height:15px}
+  .rundown-main{flex:1;min-width:0}
+  .rundown-label{display:block;font-size:14px;font-weight:550}
+  .rundown-sub{display:block;font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .rundown-bar{position:absolute;left:0;bottom:0;height:2px;width:0%;background:var(--accent)}
+  .heads{display:grid;gap:7px;margin:0 0 22px;padding:0;list-style:none}
+  .heads li{font-size:13.5px;color:#c3c8d1;line-height:1.45;padding-left:16px;position:relative}
+  .heads li::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:6px;
+    border-radius:50%;background:var(--accent)}
+  .sec-head{display:flex;align-items:center;gap:10px;margin:26px 0 6px}
+  .sec-head span{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--dim)}
+  .sec-head i{flex:1;height:1px;background:var(--line)}
+  .ev{display:grid;grid-template-columns:68px 1fr;gap:12px;padding:14px 0;
+    border-bottom:1px solid var(--line)}
+  .ev:last-child{border-bottom:0}
+  .ev.past{opacity:.45}
+  .ev-time{font-size:13px;font-weight:550;font-variant-numeric:tabular-nums;letter-spacing:0;
+    line-height:1.35;padding-top:1px}
+  .ev-time small{display:block;font-size:11.5px;font-weight:400;color:var(--dim)}
+  .ev-title{font-size:15px;font-weight:550;letter-spacing:-.015em;line-height:1.35}
+  .ev-badge{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--accent);border:1px solid rgba(124,108,246,.45);
+    border-radius:6px;padding:1px 6px;margin-left:8px;vertical-align:2px}
+  .ev-meta{font-size:12.5px;color:var(--dim);line-height:1.45;margin-top:2px}
+  .ev-prep{font-size:13.5px;line-height:1.5;color:#c3c8d1;margin-top:9px;padding:9px 12px;
+    border-radius:10px;background:rgba(255,255,255,.04);border-left:2px solid var(--line-hi)}
+  .ev-prep.high{background:rgba(124,108,246,.11);border-left-color:var(--accent)}
+  .ev-prep b{display:block;font-size:9.5px;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+  .tom{display:flex;gap:12px;padding:8px 0;font-size:13.5px;color:#c3c8d1}
+  .tom span:first-child{width:88px;flex:none;color:var(--dim);font-variant-numeric:tabular-nums}
+  .day-foot{margin-top:30px;text-align:center;font-size:12px;color:var(--dim);line-height:1.9}
+  .day-foot button{color:var(--muted);border-bottom:1px solid var(--line);font-size:12px}
+  .lock{text-align:center;padding:34px 6px 10px}
+  .lock-ico{width:54px;height:54px;border-radius:16px;margin:0 auto 18px;display:grid;
+    place-items:center;background:rgba(124,108,246,.14);color:var(--accent)}
+  .lock-ico svg{width:24px;height:24px}
+  .lock h2{font-size:22px;font-weight:650;letter-spacing:-.03em;margin:0 0 8px}
+  .lock p{color:var(--muted);font-size:14.5px;line-height:1.55;margin:0 auto 18px;max-width:30em}
+  .lock ol{text-align:left;color:#c3c8d1;font-size:14px;line-height:1.55;max-width:30em;
+    margin:0 auto 20px;padding-left:20px}
+  .lock ol li{margin-bottom:8px}
+  .lock code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+    background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px}
+  .lock input{width:100%;max-width:30em;background:#0a0b0e;color:var(--text);
+    border:1px solid var(--line-hi);border-radius:11px;padding:12px 13px;font-size:16px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin-bottom:10px}
+  .lock .cta{max-width:30em}
+  .lock-err{color:#f08a8a;font-size:13px;min-height:1.4em;margin:2px 0 8px}
+  .lock-alt{margin-top:14px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--line)}
+
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;letter-spacing:inherit}
+  a{color:inherit}
+
+  /* ---------- top bar ---------- */
+  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+  .mark{width:22px;height:22px;border-radius:7px;flex:none;position:relative;
+    background:linear-gradient(145deg,var(--accent),var(--accent-2))}
+  .mark::after{content:"";position:absolute;inset:0;border-radius:7px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+  .wordmark{font-size:12.5px;font-weight:600;letter-spacing:.02em;color:var(--muted);
+    margin-right:auto}
+  .iconbtn{width:34px;height:34px;display:grid;place-items:center;
+    border-radius:10px;color:var(--dim);transition:all .18s var(--ease)}
+  .iconbtn:hover{color:var(--text);background:rgba(255,255,255,.05)}
+  .iconbtn.on{color:var(--accent)}
+
+  /* ---------- topic picker ---------- */
+  .picker{animation:fade .35s var(--ease)}
+  .picker h2{font-size:27px;line-height:1.18;font-weight:650;letter-spacing:-.035em;
+    margin:12px 0 8px;text-wrap:balance}
+  .picker .lede{color:var(--muted);font-size:14.5px;margin:0 0 22px;max-width:30em}
+  .grid{display:grid;gap:10px;grid-template-columns:1fr}
+  @media(min-width:460px){.grid{grid-template-columns:1fr 1fr}}
+  .card{display:flex;gap:13px;align-items:flex-start;text-align:left;width:100%;
+    padding:15px 15px;border-radius:15px;border:1px solid var(--line);
+    background:rgba(255,255,255,.018);position:relative;
+    transition:border-color .18s var(--ease),background .18s var(--ease),transform .14s var(--ease)}
+  .card:hover{border-color:var(--line-hi);background:rgba(255,255,255,.04)}
+  .card:active{transform:scale(.985)}
+  .card.sel{border-color:rgba(124,108,246,.55);background:rgba(124,108,246,.11)}
+  .card.full:not(.sel){opacity:.42}
+  .card-ico{width:34px;height:34px;border-radius:10px;flex:none;display:grid;place-items:center;
+    background:rgba(255,255,255,.055);color:var(--muted);transition:all .18s var(--ease)}
+  .card.sel .card-ico{background:rgba(124,108,246,.2);color:var(--accent)}
+  .card-ico svg{width:18px;height:18px}
+  .card-main{flex:1;min-width:0}
+  .card-label{display:block;font-size:15px;font-weight:550;letter-spacing:-.015em}
+  .card-blurb{display:block;font-size:12.5px;color:var(--dim);line-height:1.45;margin-top:2px}
+  .tick{position:absolute;top:13px;right:13px;width:18px;height:18px;border-radius:50%;
+    border:1.5px solid var(--line-hi);display:grid;place-items:center;
+    transition:all .18s var(--ease)}
+  .card.sel .tick{background:var(--accent);border-color:var(--accent)}
+  .tick svg{width:10px;height:10px;opacity:0;color:#fff}
+  .card.sel .tick svg{opacity:1}
+  .picker-foot{position:sticky;bottom:0;margin-top:18px;
+    padding:14px 0 calc(var(--safe-b) + 14px);
+    background:linear-gradient(180deg,transparent,var(--bg) 34%)}
+  .cta{width:100%;padding:14px;border-radius:13px;font-size:15px;font-weight:600;
+    background:var(--text);color:#0b0c0f;transition:all .18s var(--ease)}
+  .cta[disabled]{opacity:.3;cursor:default}
+  .cta:not([disabled]):active{transform:scale(.985)}
+  .picker-note{text-align:center;font-size:12px;color:var(--dim);margin-top:9px}
+
+  /* ---------- setup ---------- */
+  .setup.in{animation:fade .35s var(--ease)}
+  .setup.fwd{animation:stepFwd .34s var(--ease)}
+  .setup.back{animation:stepBack .34s var(--ease)}
+  @keyframes stepFwd{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+  @keyframes stepBack{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+  .steps{display:flex;align-items:center;gap:6px;margin:2px 0 20px}
+  .steps i{flex:1;height:3px;border-radius:99px;background:rgba(255,255,255,.1);
+    transition:background .3s var(--ease)}
+  .steps i.on{background:var(--accent)}
+  .steps-x{margin-left:10px;font-size:12.5px;font-weight:500;color:var(--muted)}
+  .opts{display:grid;gap:10px}
+  .opt{display:flex;gap:13px;align-items:flex-start;padding:15px;border-radius:15px;
+    border:1px solid var(--line);background:rgba(255,255,255,.018)}
+  .opt.off .card-ico,.opt.off .card-label,.opt.off .card-blurb{opacity:.5}
+  .opt-status{display:block;font-size:12px;line-height:1.45;color:#a9a0f7;margin-top:6px}
+  .opt-status:empty{display:none}
+  .switch{position:relative;width:46px;height:28px;border-radius:99px;flex:none;margin-top:3px;
+    background:rgba(255,255,255,.13);transition:background .22s var(--ease)}
+  .switch i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:transform .22s var(--ease)}
+  .switch.on{background:var(--accent)}
+  .switch.on i{transform:translateX(18px)}
+  .switch[disabled]{opacity:.45;cursor:default}
+  .cta-row{display:flex;gap:10px}
+  .cta-row .cta{flex:1}
+  .cta.ghost{flex:0 0 32%;background:transparent;color:var(--text);
+    border:1px solid var(--line-hi)}
+  .len{padding:6px 0 2px}
+  .len-read{display:flex;flex-direction:column-reverse;align-items:center;
+    font-size:60px;line-height:1.05;font-weight:650;letter-spacing:-.045em;
+    font-variant-numeric:tabular-nums;margin-bottom:14px}
+  .len-read small{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:2px}
+  .len-range{height:34px}
+  .len-range::-webkit-slider-thumb{width:24px;height:24px;margin-top:-10px}
+  .len-range::-moz-range-thumb{width:24px;height:24px}
+  .len-ticks{display:flex;justify-content:space-between;font-size:11.5px;color:var(--dim);
+    font-variant-numeric:tabular-nums;margin-top:2px}
+  .pre{display:flex;align-items:center;gap:12px;padding:9px 2px;border-bottom:1px solid var(--line)}
+  .pre-ico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;
+    background:rgba(255,255,255,.055);color:var(--muted)}
+  .pre-ico:empty{background:none}
+  .pre-ico svg{width:14px;height:14px}
+  .pre-label{flex:1;font-size:14px}
+  .pre-dur{font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .pre.total{border-bottom:0;font-weight:600}
+  .pre.total .pre-dur{color:var(--text)}
+
+  /* ---------- weather ---------- */
+  .wx{display:flex;align-items:center;gap:13px;text-align:left;padding:11px 15px;
+    border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);
+    margin:0 0 16px;animation:fade .4s var(--ease)}
+  .wx-now{font-size:27px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .wx-main{flex:1;min-width:0}
+  .wx-cond{display:block;font-size:13.5px;font-weight:500}
+  .wx-later{display:block;font-size:12px;color:var(--dim);margin-top:1px}
+
+  /* ---------- now playing ---------- */
+  .np{text-align:center;padding-top:4px}
+  .art{position:relative;width:min(74vw,320px);aspect-ratio:1;margin:0 auto 26px;
+    border-radius:18px;overflow:hidden;background:#13151a;
+    box-shadow:0 30px 70px -28px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.055) inset;
+    transform-origin:center top;will-change:transform,opacity}
+  .art img{width:100%;height:100%;object-fit:cover;display:block;
+    opacity:0;transition:opacity .5s var(--ease)}
+  .art img.loaded{opacity:1}
+  .art::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,transparent 58%,rgba(0,0,0,.38))}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:10px}
+  h1.title{font-size:24px;line-height:1.22;font-weight:650;letter-spacing:-.03em;
+    margin:0 0 8px;text-wrap:balance}
+  .teaser{color:var(--muted);font-size:14.5px;line-height:1.5;margin:0 auto 6px;max-width:34em}
+  .credit{font-size:11px;color:var(--dim);margin:0 0 22px}
+  .credit a{text-decoration:none;border-bottom:1px solid var(--line)}
+
+  .scrub{width:100%;appearance:none;-webkit-appearance:none;height:24px;background:none;display:block}
+  .scrub::-webkit-slider-runnable-track{height:4px;border-radius:99px;
+    background:linear-gradient(90deg,var(--accent) var(--pct,0%),rgba(255,255,255,.1) var(--pct,0%))}
+  .scrub::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+    background:#fff;margin-top:-4px;box-shadow:0 1px 6px rgba(0,0,0,.6);transition:transform .16s var(--ease)}
+  .scrub:active::-webkit-slider-thumb{transform:scale(1.35)}
+  .scrub::-moz-range-track{height:4px;border-radius:99px;background:rgba(255,255,255,.1)}
+  .scrub::-moz-range-progress{height:4px;border-radius:99px;background:var(--accent)}
+  .scrub::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:#fff}
+  .times{display:flex;justify-content:space-between;font-size:11.5px;
+    font-variant-numeric:tabular-nums;color:var(--dim);margin-top:-2px;letter-spacing:0}
+
+  .transport{display:flex;align-items:center;justify-content:center;gap:30px;margin:18px 0 20px}
+  .skip{position:relative;width:52px;height:52px;display:grid;place-items:center;
+    color:var(--muted);border-radius:14px;transition:all .18s var(--ease)}
+  .skip:hover{color:var(--text);background:rgba(255,255,255,.05)}
+  .skip:active{transform:scale(.92)}
+  .skip span{position:absolute;inset:0;display:grid;place-items:center;
+    font-size:9px;font-weight:700;padding-top:2px}
+  .play{width:68px;height:68px;border-radius:50%;flex:none;display:grid;place-items:center;
+    background:var(--text);color:#0b0c0f;
+    box-shadow:0 12px 34px -12px rgba(255,255,255,.42);
+    transition:transform .16s var(--ease),box-shadow .35s var(--ease)}
+  .play:hover{transform:scale(1.04)} .play:active{transform:scale(.95)}
+  .play.playing{box-shadow:0 12px 34px -14px rgba(124,108,246,.8),0 0 0 8px rgba(124,108,246,.1)}
+  .play svg{width:25px;height:25px;margin-left:2px}
+  .play.playing svg{margin-left:0}
+
+  .actions{display:flex;justify-content:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+  .pill{font-size:13px;font-weight:500;color:var(--muted);padding:7px 14px;
+    border:1px solid var(--line);border-radius:10px;transition:all .18s var(--ease)}
+  .pill:hover{color:var(--text);border-color:var(--line-hi);background:rgba(255,255,255,.04)}
+  .pill:active{transform:scale(.97)}
+  .pill.on{color:var(--text);border-color:rgba(124,108,246,.5);background:rgba(124,108,246,.13)}
+
+  /* ---------- chapters ---------- */
+  .chapters{margin:22px 0 0;text-align:left}
+  .chap{display:flex;gap:12px;align-items:center;width:100%;text-align:left;
+    padding:11px 12px;border-radius:12px;border:1px solid transparent;
+    transition:all .18s var(--ease)}
+  .chap:hover{background:rgba(255,255,255,.035);border-color:var(--line)}
+  .chap.now{background:rgba(124,108,246,.1);border-color:rgba(124,108,246,.26)}
+  .chap.done .chap-label{color:var(--dim)}
+  .chap-ico{width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;
+    background:rgba(255,255,255,.055);color:var(--muted)}
+  .chap.now .chap-ico{background:rgba(124,108,246,.2);color:var(--accent)}
+  .chap-ico svg{width:15px;height:15px}
+  .chap-main{flex:1;min-width:0}
+  .chap-label{display:block;font-size:13.5px;font-weight:550;letter-spacing:-.01em}
+  .chap-title{display:block;font-size:12px;color:var(--dim);line-height:1.4;margin-top:1px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chap-dur{font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums;flex:none}
+
+  /* ---------- sticky mini player ---------- */
+  .mini{position:fixed;top:0;left:0;right:0;z-index:30;
+    display:flex;align-items:center;gap:12px;
+    padding:calc(var(--safe-t) + 9px) 18px 9px;
+    background:rgba(10,11,14,.82);backdrop-filter:blur(22px) saturate(160%);
+    -webkit-backdrop-filter:blur(22px) saturate(160%);
+    border-bottom:1px solid var(--line);
+    transform:translateY(-102%);transition:transform .32s var(--ease)}
+  .mini.show{transform:translateY(0)}
+  .mini-art{width:34px;height:34px;border-radius:8px;object-fit:cover;flex:none;background:#13151a}
+  .mini-txt{flex:1;min-width:0}
+  .mini-title{font-size:13px;font-weight:550;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;line-height:1.3}
+  .mini-sub{font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .mini-play{width:34px;height:34px;border-radius:50%;background:var(--text);color:#0b0c0f;
+    display:grid;place-items:center;flex:none}
+  .mini-play svg{width:14px;height:14px}
+  .mini-bar{position:absolute;left:0;bottom:0;height:2px;background:var(--accent);width:0%}
+
+  /* ---------- panels ---------- */
+  .panel{display:none;margin-top:18px;padding-top:18px;border-top:1px solid var(--line);
+    text-align:left}
+  .panel.open{display:block;animation:fade .3s var(--ease)}
+  @keyframes fade{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  #transcript{color:#c3c8d1;font-size:15.5px;line-height:1.78;white-space:pre-wrap}
+  .seg-head{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--accent);margin:20px 0 7px}
+  .seg-head:first-child{margin-top:0}
+  .src{display:block;padding:13px 0;border-bottom:1px solid var(--line);text-decoration:none;
+    transition:opacity .18s var(--ease)}
+  .src:hover{opacity:.72} .src:last-of-type{border-bottom:0}
+  .src-name{display:block;font-size:10.5px;font-weight:600;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+  .src-title{display:block;font-size:14.5px;line-height:1.45;color:#c3c8d1}
+  .src-title::after{content:" ↗";color:var(--dim);font-size:11px}
+  .src-foot{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);
+    font-size:12px;color:var(--dim);line-height:1.7}
+
+  /* ---------- archive ---------- */
+  .archive-head{display:flex;align-items:center;gap:10px;margin:40px 0 8px}
+  .archive-head span{font-size:11px;font-weight:600;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--dim)}
+  .archive-head i{flex:1;height:1px;background:var(--line)}
+  .ep{display:flex;gap:13px;align-items:center;width:100%;text-align:left;
+    padding:11px 10px;border-radius:13px;border:1px solid transparent;
+    transition:all .18s var(--ease);opacity:0;transform:translateY(10px)}
+  .ep.in{opacity:1;transform:none}
+  .ep:hover{background:rgba(255,255,255,.035);border-color:var(--line)}
+  .ep.current{background:rgba(124,108,246,.1);border-color:rgba(124,108,246,.26)}
+  .ep-art{width:40px;height:40px;border-radius:9px;object-fit:cover;flex:none;background:#13151a}
+  .ep-main{flex:1;min-width:0}
+  .ep-title{display:block;font-size:14px;font-weight:450;line-height:1.35;
+    overflow:hidden;text-overflow:ellipsis;display:-webkit-box;
+    -webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .ep-meta{display:block;font-size:11.5px;color:var(--dim);
+    font-variant-numeric:tabular-nums;margin-top:2px}
+
+  footer{margin-top:34px;text-align:center;color:var(--dim);font-size:12.5px;line-height:1.95}
+  footer a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)}
+  .state{text-align:center;color:var(--muted);padding:80px 20px;font-size:15px}
+
+  /* ---------- sheet ---------- */
+  .sheet{position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;
+    background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+  .sheet.open{display:flex;animation:fade .25s var(--ease)}
+  .sheet-card{width:100%;max-width:620px;margin:0 auto;background:#101216;
+    border-top-left-radius:20px;border-top-right-radius:20px;border:1px solid var(--line);
+    padding:24px 22px calc(var(--safe-b) + 24px);animation:up .3s var(--ease)}
+  @keyframes up{from{transform:translateY(24px)}to{transform:none}}
+  .sheet h3{margin:0 0 8px;font-size:17px;font-weight:600;letter-spacing:-.02em}
+  .sheet p{margin:0 0 16px;color:var(--muted);font-size:14px;line-height:1.6}
+  .sheet textarea{width:100%;height:110px;background:#0a0b0e;color:#c3c8d1;
+    border:1px solid var(--line);border-radius:10px;padding:10px;font-size:11px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;resize:none}
+  .sheet .row{display:flex;gap:8px;margin-top:14px}
+  .btn{flex:1;padding:11px;border-radius:11px;font-size:14px;font-weight:550;text-align:center;
+    border:1px solid var(--line);transition:all .18s var(--ease)}
+  .btn.primary{background:var(--text);color:#0b0c0f;border-color:transparent}
+  .btn:active{transform:scale(.98)}
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    #splash img,#splash::before,.tab-pill,.wrap{transition:opacity .3s linear!important;
+      transform:none!important;filter:none!important}
+    .art,.mini,.ep,.card{transition:none!important;animation:none!important}
+    .ep{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="splash" aria-hidden="true"><img id="splashImg" src="splash.webp" alt="" width="1100" height="594"></div>
+
+<div id="glow"></div>
+
+<div class="mini" id="mini">
+  <img class="mini-art" id="miniArt" alt="">
+  <div class="mini-txt">
+    <div class="mini-title" id="miniTitle"></div>
+    <div class="mini-sub" id="miniSub">0:00</div>
+  </div>
+  <button class="mini-play" id="miniPlay" aria-label="Play"></button>
+  <div class="mini-bar" id="miniBar"></div>
+</div>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="mark"></div>
+    <span class="wordmark" id="showTitle">What's Up?</span>
+    <button class="iconbtn spacer" id="edit" aria-label="Edit topics" title="Edit topics"
+            style="display:none">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="currentColor"/>
+        <circle cx="15" cy="12" r="2" fill="currentColor"/><circle cx="8" cy="18" r="2" fill="currentColor"/>
+      </svg>
+    </button>
+    <button class="iconbtn" id="bell" aria-label="Morning alerts" title="Morning alerts">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab on" data-tab="news" role="tab" aria-selected="true">News</button>
+    <button class="tab" data-tab="day" role="tab" aria-selected="false">My Day</button>
+    <i class="tab-pill"></i>
+  </div>
+
+  <div id="app"><div class="state">Loading…</div></div>
+  <div id="day"></div>
+
+  <footer id="newsFoot">
+    <span id="stamp"></span><br>
+    <a id="feedLink" href="feed.xml">Subscribe in a podcast app →</a>
+  </footer>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-card">
+    <h3 id="sheetTitle">Morning alerts</h3>
+    <p id="sheetBody"></p>
+    <textarea id="sheetSub" readonly style="display:none"></textarea>
+    <div class="row">
+      <button class="btn" id="sheetClose">Close</button>
+      <button class="btn primary" id="sheetAction">Enable</button>
+    </div>
+  </div>
+</div>
+
+<audio id="audio" preload="metadata"></audio>
+<audio id="dayAudio" preload="auto"></audio>
+
+<script>
+(function(){
+  "use strict";
+
+  /* The intro. The lettering eases in, holds for a beat, and lifts away as
+     the app rises underneath it -- about 1.7 seconds door to door. It starts
+     when the image has actually loaded, so nobody watches an empty screen,
+     and it gives up quickly if the image never arrives. */
+  (function(){
+    var sp = document.getElementById('splash');
+    if (!sp) { document.body.classList.add('revealed'); return; }
+    var img = document.getElementById('splashImg'), gone = false, began = false;
+    function leave(){
+      if (gone) return; gone = true;
+      sp.classList.add('out');
+      document.body.classList.add('revealed');
+      setTimeout(function(){ if (sp.parentNode) sp.parentNode.removeChild(sp); }, 620);
+    }
+    function begin(){
+      if (began || gone) return; began = true;
+      // next frame, so the starting styles are painted before they change
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        sp.classList.add('in');
+        setTimeout(leave, 1250);
+      }); });
+    }
+    if (img.complete && img.naturalWidth) begin();
+    else {
+      img.addEventListener('load', begin, {once:true});
+      img.addEventListener('error', leave, {once:true});
+      setTimeout(function(){ if (!began) leave(); }, 900);
+    }
+  })();
+
+  var audio = document.getElementById('audio');
+  var app   = document.getElementById('app');
+  var mini  = document.getElementById('mini');
+
+  var data = null;         // episodes.json
+  var dayIdx = 0;          // which day is loaded
+  var queue = [];          // the stitched playthrough: one entry per chapter
+  var qi = 0;              // index into queue
+  var speed = 1, openPanel = null, vapidKey = null, seeking = false;
+  var SPEEDS = [1, 1.25, 1.5, 1.75, 2];
+  var LENGTHS = { min:120, max:300, step:30, 'default':180 };
+
+  var store = {
+    get: function(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+    set: function(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+  };
+
+  /* What this listener asked for. Kept on the device: there are no accounts,
+     so the phone is the only place that knows. The shape is deliberately the
+     one a server would store per listener later. */
+  var prefs = { topics:[], date:true, weather:true, dates:true, length:180, done:false };
+  function loadPrefs(){
+    var raw = null;
+    try { raw = JSON.parse(store.get('prefs') || 'null'); } catch(e){}
+    if (raw && typeof raw === 'object') {
+      prefs.topics  = Array.isArray(raw.topics) ? raw.topics.slice() : [];
+      prefs.date    = raw.date !== false;
+      prefs.weather = raw.weather !== false;
+      prefs.dates   = raw.dates !== false;
+      prefs.length  = Number(raw.length) || 180;
+      prefs.done    = !!raw.done;
+      return;
+    }
+    // Someone who set up before the length slider existed: keep their topics
+    // and don't walk them through setup again.
+    var old = [];
+    try { old = JSON.parse(store.get('topics') || '[]') || []; } catch(e){}
+    if (old.length) { prefs.topics = old; prefs.done = true; savePrefs(); }
+  }
+  function savePrefs(){ store.set('prefs', JSON.stringify(prefs)); }
+
+  // Things that arrive after the page has loaded.
+  var here = null;        // {lat, lon, at}: the phone's last known position
+  var liveWx = null;      // on-screen forecast for that exact position
+  var datesClip = null;   // {url, duration, date}: decrypted birthdays reminder
+
+  // ---------- icons ----------
+  var ICONS = {
+    chart:'<path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/>',
+    chip:'<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3"/>',
+    ball:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M12 3a9 9 0 0 1 0 18M3.6 9h16.8M3.6 15h16.8"/>',
+    briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/>',
+    globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/>',
+    flask:'<path d="M9 3h6M10 3v6L5 18a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/><path d="M7.5 14h9"/>',
+    calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    cloud:'<path d="M7 18.5a4.5 4.5 0 0 1-.6-8.96 6 6 0 0 1 11.5 1.5A3.75 3.75 0 0 1 17.5 18.5z"/>',
+    gift:'<rect x="3.5" y="9" width="17" height="11.5" rx="2"/><path d="M3.5 13h17M12 9v11.5M12 9c-1.2-3.4-5-3.6-5-1.2S10.4 9 12 9zm0 0c1.2-3.4 5-3.6 5-1.2S13.6 9 12 9z"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>'
+  };
+  function icon(name){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '+
+           'stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||ICONS.chart)+'</svg>';
+  }
+  var I_PLAY  = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.2v13.6a1 1 0 0 0 1.54.84l10.5-6.8a1 1 0 0 0 0-1.68l-10.5-6.8A1 1 0 0 0 8 5.2z"/></svg>';
+  var I_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5h3.6v15H7zM13.4 4.5H17v15h-3.6z"/></svg>';
+  var I_BACK  = '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span>15</span>';
+  var I_FWD   = '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg><span>30</span>';
+  var I_TICK  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+
+  // ---------- helpers ----------
+  function fmt(s){
+    s = Math.max(0, Math.floor(s || 0));
+    var m = Math.floor(s/60), r = s%60;
+    return m + ':' + (r<10?'0':'') + r;
+  }
+  function longDate(iso){
+    var p = iso.split('-').map(Number);
+    return new Date(p[0],p[1]-1,p[2]).toLocaleDateString(undefined,
+      {weekday:'long', month:'long', day:'numeric'});
+  }
+  function shortDate(iso){
+    var p = iso.split('-').map(Number);
+    return new Date(p[0],p[1]-1,p[2]).toLocaleDateString(undefined,
+      {month:'short', day:'numeric'});
+  }
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; });
+  }
+  function menu(){ return (data && data.menu) || []; }
+  function segsFor(day){ return (day && day.segments) || {}; }
+
+  // Topics on the menu that this day actually produced. A topic whose feeds
+  // died is simply absent from that day rather than offered and broken.
+  function availableOn(day){
+    var segs = segsFor(day);
+    return menu().filter(function(m){ return !!segs[m.slug]; });
+  }
+
+  function coverOf(seg){
+    return (seg && seg.cover && seg.cover.url) ? seg.cover.url : 'icons/icon-512.png';
+  }
+
+  /* A topic's recorded lengths, shortest first. Days built before the length
+     slider have only a short and a long cut; they are read the same way, so
+     the archive keeps playing. */
+  function cutsOf(seg){
+    var out = [];
+    if (seg.cuts) {
+      Object.keys(seg.cuts).forEach(function(k){
+        if (seg.cuts[k] && seg.cuts[k].audio) out.push(seg.cuts[k]);
+      });
+    } else {
+      if (seg.short && seg.short.audio) out.push(seg.short);
+      if (seg.long && seg.long.audio) out.push(seg.long);
+    }
+    return out.sort(function(a,b){ return (a.duration||0) - (b.duration||0); });
+  }
+
+  /* Share the time out between topics.
+
+     Every topic starts on its shortest cut, so nothing the listener picked is
+     ever dropped. Then, while there is time left, the topic with the most
+     news per second already given is moved up one length. A big day for
+     markets earns the two-minute version; a quiet day for sport stays at the
+     headlines. Equal weights come out as an even split. */
+  function pickCuts(list, budget){
+    var level = list.map(function(){ return 0; });
+    var used = list.reduce(function(a,t){ return a + (t.cuts[0].duration||0); }, 0);
+    for (;;) {
+      var best = -1, bestScore = -1, bestDelta = 0;
+      for (var i=0; i<list.length; i++){
+        var cuts = list[i].cuts;
+        if (level[i] + 1 >= cuts.length) continue;
+        var cur = cuts[level[i]].duration || 1;
+        var delta = (cuts[level[i]+1].duration || 0) - cur;
+        if (used + delta > budget) continue;
+        var score = (list[i].seg.weight == null ? 0.5 : list[i].seg.weight) / cur;
+        if (score > bestScore + 1e-9) { best = i; bestScore = score; bestDelta = delta; }
+      }
+      if (best < 0) break;
+      level[best]++; used += bestDelta;
+    }
+    return level;
+  }
+
+  // ---------- where the listener is ----------
+  function distanceKm(a, b){
+    var R = 6371, rad = Math.PI/180;
+    var dLat = (b.lat-a.lat)*rad, dLon = (b.lon-a.lon)*rad;
+    var h = Math.sin(dLat/2)*Math.sin(dLat/2) +
+            Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+  // The listed town nearest the phone, if any is close enough to be "here".
+  function nearestPlace(day){
+    var wx = day && day.weather;
+    if (!here || !wx || !wx.places || !wx.places.length) return null;
+    var best = null, bestKm = Infinity;
+    wx.places.forEach(function(p){
+      var km = distanceKm(here, p);
+      if (km < bestKm) { best = p; bestKm = km; }
+    });
+    return bestKm <= (wx.nearby_km || 60) ? best : null;
+  }
+
+  /* Ask the phone where it is. A recent answer is reused, so opening the app
+     twice in a morning does not ask twice. `done` is called either way. */
+  function locate(done){
+    var saved = null;
+    try { saved = JSON.parse(store.get('here') || 'null'); } catch(e){}
+    if (saved && Date.now() - saved.at < 3*3600*1000) { here = saved; done(true); return; }
+    if (!navigator.geolocation) { done(false); return; }
+    navigator.geolocation.getCurrentPosition(function(pos){
+      here = { lat: pos.coords.latitude, lon: pos.coords.longitude, at: Date.now() };
+      store.set('here', JSON.stringify(here));
+      done(true);
+    }, function(){
+      if (saved) { here = saved; done(true); } else done(false);
+    }, { timeout: 9000, maximumAge: 30*60*1000 });
+  }
+
+  var WMO = {0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Cloudy',45:'Fog',48:'Freezing fog',
+    51:'Light drizzle',53:'Drizzle',55:'Drizzle',56:'Freezing drizzle',57:'Freezing drizzle',
+    61:'Light rain',63:'Rain',65:'Heavy rain',66:'Freezing rain',67:'Freezing rain',
+    71:'Light snow',73:'Snow',75:'Heavy snow',77:'Flurries',80:'Showers',81:'Showers',
+    82:'Heavy showers',85:'Snow showers',86:'Snow showers',95:'Thunderstorms',
+    96:'Thunderstorms',99:'Thunderstorms'};
+  function isSnow(code){ return [71,73,75,77,85,86].indexOf(code) !== -1; }
+
+  /* The on-screen forecast, for the phone's exact position. It is fetched by
+     the phone straight from the weather service, so it works anywhere,
+     whether or not a spoken forecast exists for that town. */
+  function loadLiveWeather(){
+    if (!here) return;
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + here.lat.toFixed(3) +
+      '&longitude=' + here.lon.toFixed(3) +
+      '&current=temperature_2m,weather_code' +
+      '&hourly=precipitation_probability,weather_code' +
+      '&daily=temperature_2m_max,temperature_2m_min' +
+      '&temperature_unit=fahrenheit&timezone=auto&forecast_days=1';
+    fetch(url).then(function(r){ return r.ok ? r.json() : null; }).then(function(f){
+      if (!f || !f.current || !f.daily) return;
+      var nowHour = Number(String(f.current.time || '').slice(11,13)) || 0;
+      var peak = null;
+      ((f.hourly && f.hourly.time) || []).forEach(function(t, i){
+        var h = Number(t.slice(11,13));
+        var pop = f.hourly.precipitation_probability ? f.hourly.precipitation_probability[i] : null;
+        if (h < nowHour || pop == null) return;
+        if (!peak || pop > peak.pop) peak = { pop: pop, hour: h, code: f.hourly.weather_code[i] };
+      });
+      var later = 'No rain expected for the rest of the day';
+      if (peak && peak.pop >= 30) {
+        var hh = peak.hour % 12 === 0 ? 12 : peak.hour % 12;
+        later = Math.round(peak.pop) + '% chance of ' + (isSnow(peak.code) ? 'snow' : 'rain') +
+          ' around ' + hh + (peak.hour < 12 ? ' AM' : ' PM');
+      }
+      liveWx = {
+        now: Math.round(f.current.temperature_2m),
+        high: Math.round(f.daily.temperature_2m_max[0]),
+        low: Math.round(f.daily.temperature_2m_min[0]),
+        cond: WMO[f.current.weather_code] || 'Unsettled',
+        later: later
+      };
+      paintWeather();
+    }).catch(function(){});
+  }
+  function paintWeather(){
+    var box = document.getElementById('wx');
+    if (!box) return;
+    if (!prefs.weather || !liveWx) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    box.innerHTML =
+      '<span class="wx-now">' + liveWx.now + '&deg;</span>' +
+      '<span class="wx-main"><span class="wx-cond">' + esc(liveWx.cond) +
+        ' &middot; High ' + liveWx.high + '&deg; &middot; Low ' + liveWx.low + '&deg;</span>' +
+      '<span class="wx-later">' + esc(liveWx.later) + '</span></span>';
+  }
+
+  /* Start whatever needs the network after the brief is already on screen:
+     the phone's position, the on-screen forecast, and the owner's birthdays
+     reminder. Each one re-plans the brief when it arrives, but only if the
+     listener hasn't started playing; a brief never changes under someone's
+     ears. */
+  function loadExtras(){
+    if (prefs.weather) {
+      locate(function(ok){
+        if (!ok) return;
+        loadLiveWeather();
+        replanIfIdle();
+      });
+    }
+    loadDatesClip();
+  }
+  function loadDatesClip(){
+    if (datesClip) return;
+    if (prefs.dates && store.get('dayKey') && window.crypto && crypto.subtle) {
+      fetch('myday/index.json?t=' + Date.now())
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(idx){
+          if (!idx || !idx.dates) return;
+          return importDayKey(store.get('dayKey')).then(function(key){
+            return fetch(idx.dates + '?t=' + Date.now())
+              .then(function(r){ if (!r.ok) throw new Error('missing'); return r.arrayBuffer(); })
+              .then(function(buf){ return openSealed(key, buf, idx.date, 'dates'); })
+              .then(function(plain){
+                datesClip = {
+                  url: URL.createObjectURL(new Blob([plain], {type:'audio/mpeg'})),
+                  duration: idx.dates_seconds || 8, date: idx.date
+                };
+                replanIfIdle();
+              });
+          });
+        }).catch(function(){});
+    }
+  }
+  function replanIfIdle(){
+    if (!prefs.done || !queue.length) return;
+    if (!audio.paused || qi !== 0 || (audio.currentTime || 0) > 0.5) return;
+    var before = key();
+    buildQueue();
+    if (key() === before) return;
+    loadSegment(0, false);
+    if (document.getElementById('scrub')) renderPlayer();
+  }
+
+  /* Plan a brief: the opening (date, weather, birthdays) and then the topics,
+     each at the length the slider's total allows. Pure: it reads the
+     preferences it is given, so the setup screen can preview a plan before
+     anything is saved. */
+  function planFor(p, idx){
+    var day = data.episodes[idx];
+    var segs = segsFor(day);
+    var items = [];
+
+    var intro = day.intro || {};
+    if (p.date && intro.date && intro.date.audio) {
+      items.push({ kind:'date', id:'date', label:'Today', icon:'calendar',
+        title: longDate(day.date), audio: intro.date.audio,
+        duration: intro.date.duration || 3, text: intro.date.text || '' });
+    }
+    var place = p.weather ? nearestPlace(day) : null;
+    if (place && place.audio) {
+      items.push({ kind:'weather', id:'weather', label:'Weather', icon:'cloud',
+        title: place.name + ' · ' + place.now + '°, high ' + place.high + '°, low ' + place.low + '°',
+        audio: place.audio, duration: place.duration || 15, text: place.text || '' });
+    }
+    if (p.dates && datesClip && datesClip.date === day.date) {
+      items.push({ kind:'dates', id:'dates', label:'Coming up', icon:'gift',
+        title: 'Birthdays and anniversaries this week',
+        audio: datesClip.url, duration: datesClip.duration, text: '' });
+    }
+
+    var list = [];
+    menu().forEach(function(m){
+      if (p.topics.indexOf(m.slug) === -1 || !segs[m.slug]) return;
+      var cuts = cutsOf(segs[m.slug]);
+      if (cuts.length) list.push({ m:m, seg:segs[m.slug], cuts:cuts });
+    });
+    var opening = items.reduce(function(a,q){ return a + q.duration; }, 0);
+    var level = pickCuts(list, Math.max(0, p.length - opening));
+    list.forEach(function(t, i){
+      var cut = t.cuts[level[i]];
+      items.push({ kind:'topic', id:t.m.slug, slug:t.m.slug, label:t.m.label, icon:t.m.icon,
+        title:t.seg.title, seg:t.seg, audio:cut.audio, duration:cut.duration || 0,
+        transcript:cut.transcript });
+    });
+    return items;
+  }
+  // The shortest brief these choices can make: every topic at its headline.
+  function minimumFor(p, idx){
+    var floor = { topics:p.topics, date:p.date, weather:p.weather, dates:p.dates, length:0 };
+    return planFor(floor, idx).reduce(function(a,q){ return a + q.duration; }, 0);
+  }
+
+  function buildQueue(){
+    queue = planFor(prefs, dayIdx);
+    if (!queue.some(function(q){ return q.kind === 'topic'; })) queue = [];
+    qi = 0;
+  }
+
+  function totalDuration(){
+    return queue.reduce(function(a,q){ return a + (q.duration||0); }, 0);
+  }
+  function elapsedBefore(i){
+    var t = 0; for (var n=0; n<i; n++) t += queue[n].duration||0; return t;
+  }
+  function globalTime(){
+    return elapsedBefore(qi) + (audio.currentTime || 0);
+  }
+
+  // The topic whose story leads: highest model-assigned weight. This is how
+  // one cover gets chosen to represent a brief assembled from several topics.
+  function leadSegment(){
+    var topics = queue.filter(function(q){ return q.kind === 'topic'; });
+    if (!topics.length) return null;
+    return topics.reduce(function(a,b){
+      return (b.seg.weight||0) > (a.seg.weight||0) ? b : a;
+    }).seg;
+  }
+
+  /* ---------- setup ----------
+     Three short steps the first time, and the same three whenever the
+     listener wants to change something. Nothing is saved until the last
+     step, so backing out leaves the brief as it was. */
+  var draft = null, setupStep = 1;
+  function openSetup(){
+    audio.pause();
+    draft = { topics: prefs.topics.slice(), date: prefs.date, weather: prefs.weather,
+              dates: prefs.dates, length: prefs.length };
+    setupStep = 1;
+    renderSetup('in');
+    document.getElementById('edit').style.display = 'none';
+    mini.classList.remove('show');
+    window.scrollTo({top:0});
+  }
+  function closeSetup(save){
+    if (save) {
+      prefs.topics = draft.topics.slice(); prefs.date = draft.date;
+      prefs.weather = draft.weather; prefs.dates = draft.dates;
+      prefs.length = draft.length; prefs.done = true;
+      savePrefs();
+    }
+    draft = null;
+    buildQueue();
+    if (!queue.length) { openSetup(); return; }
+    loadSegment(0, false);
+    renderPlayer();
+    loadExtras();
+    window.scrollTo({top:0});
+  }
+
+  function renderSetup(motion){
+    var day = data.episodes[dayIdx];
+    var editing = prefs.done;
+    var head =
+      '<div class="steps"><i class="' + (setupStep >= 1 ? 'on' : '') + '"></i>' +
+      '<i class="' + (setupStep >= 2 ? 'on' : '') + '"></i>' +
+      '<i class="' + (setupStep >= 3 ? 'on' : '') + '"></i>' +
+      (editing ? '<button class="steps-x" id="setupX" aria-label="Close without saving">Cancel</button>' : '') +
+      '</div>';
+    var body = setupStep === 1 ? stepTopics(day) : setupStep === 2 ? stepMorning(day) : stepLength(day);
+    app.innerHTML = '<div class="picker setup ' + (motion || 'in') + '">' + head + body + '</div>';
+    var x = document.getElementById('setupX');
+    if (x) x.onclick = function(){ closeSetup(false); };
+    if (setupStep === 1) wireTopics(day);
+    else if (setupStep === 2) wireMorning(day);
+    else wireLength(day);
+  }
+  function go(step){
+    var forward = step > setupStep;
+    setupStep = step;
+    renderSetup(forward ? 'fwd' : 'back');
+    window.scrollTo({top:0});
+  }
+
+  // Step 1: topics
+  function topicCards(day){
+    return availableOn(day).map(function(m){
+      var on = draft.topics.indexOf(m.slug) !== -1;
+      return '<button class="card'+(on?' sel':'')+'" data-slug="'+esc(m.slug)+'">'+
+        '<span class="card-ico">'+icon(m.icon)+'</span>'+
+        '<span class="card-main"><span class="card-label">'+esc(m.label)+'</span>'+
+        '<span class="card-blurb">'+esc(m.blurb)+'</span></span>'+
+        '<span class="tick">'+I_TICK+'</span></button>';
+    }).join('');
+  }
+  function stepTopics(day){
+    return '<h2>What do you want to hear?</h2>' +
+      '<p class="lede">Pick the topics for your morning brief. Choose as many as you like; ' +
+      'you decide how long the whole thing runs in a moment.</p>' +
+      '<div class="grid" id="grid">' + topicCards(day) + '</div>' +
+      '<div class="picker-foot"><button class="cta" id="next"' +
+        (draft.topics.length ? '' : ' disabled') + '>Next</button>' +
+      '<div class="picker-note" id="note">' + topicNote() + '</div></div>';
+  }
+  function topicNote(){
+    var n = draft.topics.length;
+    return n ? n + (n === 1 ? ' topic' : ' topics') + ' selected' : 'Pick at least one.';
+  }
+  function wireTopics(day){
+    document.getElementById('grid').addEventListener('click', function(ev){
+      var b = ev.target.closest('.card');
+      if (!b) return;
+      var slug = b.dataset.slug, at = draft.topics.indexOf(slug);
+      if (at !== -1) draft.topics.splice(at,1); else draft.topics.push(slug);
+      b.classList.toggle('sel', at === -1);
+      document.getElementById('note').textContent = topicNote();
+      document.getElementById('next').disabled = !draft.topics.length;
+    });
+    document.getElementById('next').onclick = function(){ if (draft.topics.length) go(2); };
+  }
+
+  // Step 2: the opening of the brief
+  function row(id, ico, label, blurb, on, disabled, status){
+    return '<div class="opt' + (disabled ? ' off' : '') + '">' +
+      '<span class="card-ico">' + icon(ico) + '</span>' +
+      '<span class="card-main"><span class="card-label">' + esc(label) + '</span>' +
+      '<span class="card-blurb">' + esc(blurb) + '</span>' +
+      '<span class="opt-status" id="' + id + 'Status">' + esc(status || '') + '</span></span>' +
+      '<button class="switch' + (on && !disabled ? ' on' : '') + '" id="' + id + '" role="switch" ' +
+        'aria-checked="' + (on && !disabled ? 'true' : 'false') + '" aria-label="' + esc(label) + '"' +
+        (disabled ? ' disabled' : '') + '><i></i></button></div>';
+  }
+  function weatherStatus(day){
+    if (!draft.weather) return '';
+    if (!here) return 'Waiting for your location…';
+    var p = nearestPlace(day);
+    if (p) return 'Spoken forecast for ' + p.name + ', and on screen for your exact spot.';
+    var names = ((day.weather && day.weather.places) || []).map(function(x){ return x.name; });
+    return 'On screen for your exact spot. A spoken forecast isn’t recorded for your area yet' +
+      (names.length ? ' (so far: ' + names.join(', ') + ').' : '.');
+  }
+  function stepMorning(day){
+    var hasKey = !!store.get('dayKey');
+    return '<h2>How should it open?</h2>' +
+      '<p class="lede">Your brief can start with a few things about your own day before the news.</p>' +
+      '<div class="opts">' +
+        row('optDate', 'calendar', 'The date', 'The day of the week and the date, spoken first.',
+            draft.date, false, '') +
+        row('optWeather', 'cloud', 'Weather',
+            'Now, today’s high and low, and what to expect for the rest of the day.',
+            draft.weather, false, weatherStatus(day)) +
+        row('optDates', 'gift', 'Birthdays and anniversaries',
+            'A reminder of any coming up in the next week, from your calendar.',
+            draft.dates, !hasKey,
+            hasKey ? '' : 'Needs a connected calendar. Unlock My Day on this device to turn it on.') +
+      '</div>' +
+      '<div class="picker-foot"><div class="cta-row">' +
+        '<button class="cta ghost" id="back">Back</button>' +
+        '<button class="cta" id="next">Next</button></div></div>';
+  }
+  function flip(id, on){
+    var b = document.getElementById(id);
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+  function wireMorning(day){
+    document.getElementById('optDate').onclick = function(){
+      draft.date = !draft.date; flip('optDate', draft.date);
+    };
+    document.getElementById('optDates').onclick = function(){
+      draft.dates = !draft.dates; flip('optDates', draft.dates);
+    };
+    function askWhere(){
+      var s = document.getElementById('optWeatherStatus');
+      if (s) s.textContent = weatherStatus(day);
+      locate(function(ok){
+        var el = document.getElementById('optWeatherStatus');
+        if (!el) return;
+        el.textContent = ok ? weatherStatus(day)
+          : 'Location is off for this app, so weather can’t be shown. Allow it in your phone’s settings, then switch this on again.';
+      });
+    }
+    document.getElementById('optWeather').onclick = function(){
+      draft.weather = !draft.weather; flip('optWeather', draft.weather);
+      if (draft.weather) askWhere();
+      else document.getElementById('optWeatherStatus').textContent = '';
+    };
+    if (draft.weather && !here) askWhere();
+    document.getElementById('back').onclick = function(){ go(1); };
+    document.getElementById('next').onclick = function(){ go(3); };
+  }
+
+  // Step 3: how long
+  function stepLength(day){
+    return '<h2>How long should it run?</h2>' +
+      '<p class="lede">Set the total. Every topic you picked is always included; the extra time ' +
+      'goes to whichever had the biggest news that day.</p>' +
+      '<div class="len"><div class="len-read" id="lenRead"></div>' +
+        '<input class="scrub len-range" id="len" type="range" min="' + LENGTHS.min + '" max="' +
+          LENGTHS.max + '" step="' + LENGTHS.step + '" aria-label="Brief length">' +
+        '<div class="len-ticks"><span>2 min</span><span>3</span><span>4</span><span>5 min</span></div>' +
+      '</div>' +
+      '<div class="sec-head"><span>Today, that looks like</span><i></i></div>' +
+      '<div class="preview" id="preview"></div>' +
+      '<div class="picker-foot"><div class="cta-row">' +
+        '<button class="cta ghost" id="back">Back</button>' +
+        '<button class="cta" id="next">' + (prefs.done ? 'Save' : 'Start listening') + '</button></div>' +
+      '<div class="picker-note" id="note"></div></div>';
+  }
+  function wireLength(day){
+    var range = document.getElementById('len');
+    // The slider can't promise less than the picks need: six topics at their
+    // headline length plus the opening is the floor.
+    var need = minimumFor(draft, dayIdx);
+    var floor = Math.min(LENGTHS.max, Math.ceil(need / LENGTHS.step) * LENGTHS.step);
+    function paintLen(){
+      if (draft.length < floor) draft.length = floor;
+      range.value = draft.length;
+      range.style.setProperty('--pct',
+        ((draft.length - LENGTHS.min) / (LENGTHS.max - LENGTHS.min) * 100) + '%');
+      var plan = planFor(draft, dayIdx);
+      var total = plan.reduce(function(a,q){ return a + q.duration; }, 0);
+      document.getElementById('lenRead').innerHTML =
+        fmt(draft.length) + '<small>up to</small>';
+      document.getElementById('preview').innerHTML = plan.map(function(q){
+        return '<div class="pre"><span class="pre-ico">' + icon(q.icon) + '</span>' +
+          '<span class="pre-label">' + esc(q.label) + '</span>' +
+          '<span class="pre-dur">' + fmt(q.duration) + '</span></div>';
+      }).join('') + '<div class="pre total"><span class="pre-ico"></span>' +
+        '<span class="pre-label">Today’s brief</span><span class="pre-dur">' + fmt(total) + '</span></div>';
+      // Only explain the floor while the listener is pressed against it.
+      document.getElementById('note').textContent =
+        (floor > LENGTHS.min && draft.length === floor)
+          ? 'Your picks need at least ' + fmt(floor) + '.'
+          : (total < draft.length - 45 ? 'There isn’t more than that to say today, so it runs shorter.' : '');
+    }
+    range.oninput = function(){
+      draft.length = Math.max(floor, Number(this.value));
+      paintLen();
+    };
+    paintLen();
+    document.getElementById('back').onclick = function(){ go(2); };
+    document.getElementById('next').onclick = function(){ closeSetup(true); };
+  }
+
+  // ---------- the player ----------
+  function renderPlayer(){
+    var day = data.episodes[dayIdx];
+    var lead = leadSegment();
+    if (!lead) { openSetup(); return; }
+
+    var anySources = queue.some(function(q){
+      return q.seg && q.seg.sources && q.seg.sources.length; });
+
+    app.innerHTML =
+      '<div class="np">' +
+        '<div class="art" id="art"><img id="artImg" alt="" src="'+esc(coverOf(lead))+'"></div>' +
+        '<div class="eyebrow">'+esc(longDate(day.date))+'</div>' +
+        '<h1 class="title">'+esc(lead.title)+'</h1>' +
+        (lead.teaser ? '<p class="teaser">'+esc(lead.teaser)+'</p>' : '') +
+        creditHtml(lead) +
+        '<div class="wx" id="wx" style="display:none"></div>' +
+        '<input class="scrub" id="scrub" type="range" min="0" max="1000" value="0" aria-label="Seek">' +
+        '<div class="times"><span id="cur">0:00</span>'+
+          '<span id="dur">'+fmt(totalDuration())+'</span></div>' +
+        '<div class="transport">' +
+          '<button class="skip" id="back" aria-label="Back 15 seconds">'+I_BACK+'</button>' +
+          '<button class="play" id="play" aria-label="Play">'+I_PLAY+'</button>' +
+          '<button class="skip" id="fwd" aria-label="Forward 30 seconds">'+I_FWD+'</button>' +
+        '</div>' +
+        '<div class="actions">' +
+          '<button class="pill" id="speed">1&times;</button>' +
+          (anySources ? '<button class="pill" id="sbtn">Sources</button>' : '') +
+          '<button class="pill" id="tbtn">Transcript</button>' +
+        '</div>' +
+        '<div class="chapters" id="chapters"></div>' +
+        '<div class="panel" id="sources">'+sourcesHtml()+'</div>' +
+        '<div class="panel" id="transcript"></div>' +
+      '</div>' +
+      (data.episodes.length > 1
+        ? '<div class="archive-head"><span>Earlier</span><i></i></div><div id="archive"></div>'
+        : '');
+
+    var img = document.getElementById('artImg');
+    img.onload = function(){ this.classList.add('loaded'); tintFrom(this); };
+    img.onerror = function(){ this.src = 'icons/icon-512.png'; };
+    if (img.complete) img.onload();
+
+    renderChapters();
+    if (data.episodes.length > 1) buildArchive();
+    wire();
+    syncPlay();
+    paint();
+    paintWeather();
+    document.getElementById('edit').style.display = '';
+    document.getElementById('miniArt').src = coverOf(lead);
+  }
+
+  function renderChapters(){
+    var box = document.getElementById('chapters');
+    if (!box) return;
+    box.innerHTML = queue.map(function(q,i){
+      var cls = i === qi ? ' now' : (i < qi ? ' done' : '');
+      return '<button class="chap'+cls+'" data-i="'+i+'">'+
+        '<span class="chap-ico">'+icon(q.icon)+'</span>'+
+        '<span class="chap-main"><span class="chap-label">'+esc(q.label)+'</span>'+
+        '<span class="chap-title">'+esc(q.title)+'</span></span>'+
+        '<span class="chap-dur">'+fmt(q.duration)+'</span></button>';
+    }).join('');
+    box.onclick = function(ev){
+      var b = ev.target.closest('.chap');
+      if (!b) return;
+      var want = Number(b.dataset.i);
+      var playing = !audio.paused;
+      loadSegment(want, playing);
+      renderChapters();
+    };
+  }
+
+  function creditHtml(seg){
+    var c = seg.cover;
+    if (!c || c.type !== 'photo' || !c.credit) return '';
+    var label = 'Cover: ' + esc(c.credit);
+    return '<div class="credit">' + (c.link
+      ? '<a href="'+esc(c.link)+'" target="_blank" rel="noopener noreferrer">'+label+'</a>'
+      : label) + '</div>';
+  }
+
+  function sourcesHtml(){
+    var out = queue.map(function(q){
+      var list = (q.seg && q.seg.sources) || [];
+      if (!list.length) return '';
+      return '<div class="seg-head">'+esc(q.label)+'</div>' + list.map(function(s){
+        return '<a class="src" href="'+esc(s.link)+'" target="_blank" rel="noopener noreferrer">'+
+                 '<span class="src-name">'+esc(s.source)+'</span>'+
+                 '<span class="src-title">'+esc(s.title)+'</span></a>';
+      }).join('');
+    }).join('');
+    return out + '<div class="src-foot">Reporting from the outlets above. '+
+      'Market levels via Yahoo Finance; Treasury yields from the US Treasury '+
+      'daily curve; sectors use the SPDR sector ETFs. Weather from Open-Meteo.</div>';
+  }
+
+  function buildArchive(){
+    var box = document.getElementById('archive');
+    box.innerHTML = data.episodes.map(function(e,i){
+      var plan = planFor(prefs, i);
+      var mine = plan.filter(function(q){ return q.kind === 'topic'; });
+      if (!mine.length) return '';
+      var lead = mine.reduce(function(a,b){
+        return (b.seg.weight||0) > (a.seg.weight||0) ? b : a; }).seg;
+      var secs = plan.reduce(function(a,q){ return a + q.duration; }, 0);
+      return '<button class="ep'+(i===dayIdx?' current':'')+'" data-i="'+i+'">'+
+        '<img class="ep-art" src="'+esc(coverOf(lead))+'" alt="" loading="lazy">'+
+        '<span class="ep-main"><span class="ep-title">'+esc(lead.title)+'</span>'+
+        '<span class="ep-meta">'+shortDate(e.date)+' · '+fmt(secs)+'</span></span>'+
+      '</button>';
+    }).join('');
+    box.addEventListener('click', function(ev){
+      var b = ev.target.closest('.ep');
+      if (!b) return;
+      dayIdx = Number(b.dataset.i);
+      buildQueue();
+      if (!queue.length) { dayIdx = 0; buildQueue(); }
+      loadSegment(0, true);
+      renderPlayer();
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en, n){
+        if (en.isIntersecting) {
+          setTimeout(function(){ en.target.classList.add('in'); }, n * 45);
+          io.unobserve(en.target);
+        }
+      });
+    }, {rootMargin:'0px 0px -40px 0px'});
+    [].forEach.call(box.children, function(c){ io.observe(c); });
+  }
+
+  function tintFrom(img){
+    try {
+      var c = document.createElement('canvas');
+      c.width = c.height = 12;
+      var x = c.getContext('2d', {willReadFrequently:true});
+      x.drawImage(img, 0, 0, 12, 12);
+      var d = x.getImageData(0,0,12,12).data, r=0,g=0,b=0,n=0;
+      for (var i=0;i<d.length;i+=4){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++; }
+      r=Math.round(r/n); g=Math.round(g/n); b=Math.round(b/n);
+      var max = Math.max(r,g,b) || 1, boost = Math.min(2.1, 170/max);
+      r=Math.min(255,Math.round(r*boost)); g=Math.min(255,Math.round(g*boost)); b=Math.min(255,Math.round(b*boost));
+      document.getElementById('glow').style.setProperty('--tint','rgba('+r+','+g+','+b+',.26)');
+    } catch(e){ /* cross-origin cover: keep the default violet wash */ }
+  }
+
+  function setPanel(name){
+    openPanel = (openPanel === name) ? null : name;
+    [['sources','sbtn'],['transcript','tbtn']].forEach(function(p){
+      var box = document.getElementById(p[0]), btn = document.getElementById(p[1]);
+      var on = openPanel === p[0];
+      if (box) box.classList.toggle('open', on);
+      if (btn) btn.classList.toggle('on', on);
+    });
+    if (openPanel === 'transcript') loadTranscripts();
+  }
+
+  function loadTranscripts(){
+    var box = document.getElementById('transcript');
+    if (!box || box.dataset.loaded === key()) return;
+    box.dataset.loaded = key();
+    box.textContent = 'Loading…';
+    Promise.all(queue.map(function(q){
+      if (q.kind === 'dates') return Promise.resolve({label:q.label,
+        text:'Your reminder is private, so it isn’t written out here. See it in the My Day tab.'});
+      if (!q.transcript) return Promise.resolve({label:q.label, text:q.text || ''});
+      return fetch(q.transcript).then(function(r){ return r.ok ? r.text() : ''; })
+        .then(function(t){ return {label:q.label, text:t}; })
+        .catch(function(){ return {label:q.label, text:''}; });
+    })).then(function(parts){
+      box.innerHTML = parts.map(function(p){
+        if (!p.text) return '';
+        return '<div class="seg-head">'+esc(p.label)+'</div>'+esc(p.text);
+      }).join('\n\n') || 'Transcript unavailable.';
+    });
+  }
+  function key(){
+    return data.episodes[dayIdx].date + '|' +
+      queue.map(function(q){ return q.id + ':' + q.duration; }).join(',');
+  }
+
+  function wire(){
+    document.getElementById('play').onclick = toggle;
+    document.getElementById('back').onclick = function(){ seekGlobal(globalTime() - 15); };
+    document.getElementById('fwd').onclick  = function(){ seekGlobal(globalTime() + 30); };
+
+    var sp = document.getElementById('speed');
+    sp.innerHTML = speed + '&times;';
+    sp.classList.toggle('on', speed !== 1);
+    sp.onclick = function(){
+      speed = SPEEDS[(SPEEDS.indexOf(speed)+1) % SPEEDS.length];
+      audio.playbackRate = speed;
+      store.set('speed', speed);
+      sp.innerHTML = speed + '&times;';
+      sp.classList.toggle('on', speed !== 1);
+    };
+    var sbtn = document.getElementById('sbtn');
+    if (sbtn) sbtn.onclick = function(){ setPanel('sources'); };
+    document.getElementById('tbtn').onclick = function(){ setPanel('transcript'); };
+
+    var scrub = document.getElementById('scrub');
+    scrub.oninput  = function(){ seeking = true; };
+    scrub.onchange = function(){
+      seeking = false;
+      seekGlobal(totalDuration() * (this.value/1000));
+    };
+  }
+
+  function toggle(){ audio.paused ? audio.play().catch(function(){}) : audio.pause(); }
+
+  /* Seek across the whole stitched brief, hopping segments as needed. */
+  function seekGlobal(t){
+    var total = totalDuration();
+    t = Math.max(0, Math.min(total - 0.25, t));
+    var acc = 0;
+    for (var i=0; i<queue.length; i++){
+      var d = queue[i].duration || 0;
+      if (t < acc + d || i === queue.length - 1){
+        var within = t - acc;
+        if (i === qi){ audio.currentTime = within; }
+        else { loadSegment(i, !audio.paused, within); }
+        return;
+      }
+      acc += d;
+    }
+  }
+
+  /* Load one chapter into the single <audio> element.
+
+     There is deliberately ONE element for the whole playthrough, with its src
+     swapped between chapters, rather than one element per chapter. On iOS the
+     permission to play audio is granted to an element by a user gesture; a
+     freshly created element has no such permission, so a brief assembled from
+     several files would stop dead after the first one. Swapping src on the
+     element the listener actually pressed play on keeps that permission for
+     the whole brief. */
+  function loadSegment(i, autoplay, at){
+    if (!queue.length) return;
+    qi = Math.max(0, Math.min(queue.length - 1, i));
+    var q = queue[qi];
+    audio.src = q.audio;
+    audio.playbackRate = speed;
+    if (at) {
+      // Wait for metadata, or the seek is discarded by the element.
+      audio.addEventListener('loadedmetadata', function once(){
+        audio.removeEventListener('loadedmetadata', once);
+        try { audio.currentTime = at; } catch(e){}
+        paint();
+      });
+    } else {
+      paint();
+    }
+    setMediaSession();
+    renderChapters();
+    document.getElementById('miniTitle').textContent = q.label + ' · ' + q.title;
+    if (autoplay) audio.play().catch(function(){});
+  }
+
+  function setMediaSession(){
+    if (!('mediaSession' in navigator)) return;
+    var day = data.episodes[dayIdx], q = queue[qi], lead = leadSegment();
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: q.label + ' — ' + q.title,
+        artist: data.show || "What's Up?",
+        album: longDate(day.date),
+        artwork: [{ src: new URL(coverOf(lead), location.href).href,
+                    sizes:'1024x1024', type:'image/png' }]
+      });
+    } catch(e){}
+    var acts = {
+      play: function(){ audio.play().catch(function(){}); },
+      pause: function(){ audio.pause(); },
+      seekbackward: function(){ seekGlobal(globalTime() - 15); },
+      seekforward:  function(){ seekGlobal(globalTime() + 30); },
+      previoustrack: function(){ if (qi > 0) loadSegment(qi-1, true); },
+      nexttrack: function(){ if (qi < queue.length-1) loadSegment(qi+1, true); }
+    };
+    Object.keys(acts).forEach(function(k){
+      try { navigator.mediaSession.setActionHandler(k, acts[k]); } catch(e){}
+    });
+  }
+
+  function syncPlay(){
+    var playing = !audio.paused;
+    var p = document.getElementById('play');
+    if (p){
+      p.innerHTML = playing ? I_PAUSE : I_PLAY;
+      p.classList.toggle('playing', playing);
+      p.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    }
+    var mp = document.getElementById('miniPlay');
+    mp.innerHTML = playing ? I_PAUSE : I_PLAY;
+    mp.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+  }
+
+  // ---------- scroll ----------
+  var ticking = false;
+  function onScroll(){
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function(){
+      var art = document.getElementById('art');
+      var y = window.scrollY || 0;
+      if (art){
+        var t = Math.min(1, y / 260);
+        art.style.transform = 'scale(' + (1 - t*0.14) + ') translateY(' + (-y*0.14) + 'px)';
+        art.style.opacity = String(1 - t*0.55);
+        mini.classList.toggle('show', y > 230);
+      }
+      ticking = false;
+    });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  document.getElementById('miniPlay').onclick = toggle;
+  mini.onclick = function(ev){
+    if (ev.target.closest('#miniPlay')) return;
+    window.scrollTo({top:0, behavior:'smooth'});
+  };
+
+  // ---------- audio events ----------
+  /* Paint the unified timeline. Called on timeupdate and immediately after a
+     seek, because a listener who scrubs while paused gets no timeupdate and
+     would otherwise see the clock stuck at the segment boundary. */
+  function paint(){
+    if (!queue.length) return;
+    var g = globalTime(), total = totalDuration();
+    var cur = document.getElementById('cur'), scrub = document.getElementById('scrub');
+    if (cur) cur.textContent = fmt(g);
+    var ms = document.getElementById('miniSub');
+    if (ms) ms.textContent = fmt(g) + ' / ' + fmt(total);
+    if (total && !seeking){
+      var pct = g / total * 1000;
+      if (scrub){ scrub.value = pct; scrub.style.setProperty('--pct', (pct/10)+'%'); }
+      var bar = document.getElementById('miniBar');
+      if (bar) bar.style.width = (pct/10)+'%';
+    }
+    return g;
+  }
+
+  audio.addEventListener('timeupdate', function(){
+    var g = paint();
+    if (g != null && Math.floor(g) % 5 === 0) store.set('pos:'+key(), Math.floor(g));
+  });
+  audio.addEventListener('seeked', paint);
+
+  /* Advance to the next segment. This is what makes several files play as one
+     brief, and it runs inside the ended handler so the element keeps the play
+     permission the listener's original tap gave it. */
+  audio.addEventListener('ended', function(){
+    if (qi < queue.length - 1){
+      loadSegment(qi + 1, true);
+    } else {
+      store.set('pos:'+key(), 0);
+      syncPlay();
+      renderChapters();
+    }
+  });
+
+  audio.addEventListener('play', function(){ dayAudio.pause(); syncPlay(); renderChapters(); });
+  audio.addEventListener('pause', syncPlay);
+
+  document.addEventListener('keydown', function(e){
+    if (!data || !queue.length || /input|textarea/i.test(e.target.tagName||'')) return;
+    if (e.code === 'Space'){ e.preventDefault(); toggle(); }
+    else if (e.code === 'ArrowLeft')  seekGlobal(globalTime() - 15);
+    else if (e.code === 'ArrowRight') seekGlobal(globalTime() + 30);
+  });
+
+  document.getElementById('edit').onclick = openSetup;
+
+  // ---------- notifications ----------
+  var sheet = document.getElementById('sheet');
+  function openSheet(title, body, actionLabel, action, sub){
+    document.getElementById('sheetTitle').textContent = title;
+    document.getElementById('sheetBody').textContent = body;
+    var ta = document.getElementById('sheetSub');
+    ta.style.display = sub ? 'block' : 'none';
+    if (sub) ta.value = sub;
+    var btn = document.getElementById('sheetAction');
+    btn.textContent = actionLabel;
+    btn.style.display = action ? 'block' : 'none';
+    btn.onclick = action || null;
+    sheet.classList.add('open');
+  }
+  document.getElementById('sheetClose').onclick = function(){ sheet.classList.remove('open'); };
+  sheet.onclick = function(e){ if (e.target === sheet) sheet.classList.remove('open'); };
+
+  function b64ToU8(b64){
+    var pad = '='.repeat((4 - b64.length % 4) % 4);
+    var raw = atob((b64 + pad).replace(/-/g,'+').replace(/_/g,'/'));
+    return Uint8Array.from([].map.call(raw, function(c){ return c.charCodeAt(0); }));
+  }
+
+  function bellState(){
+    var b = document.getElementById('bell');
+    if (!('Notification' in window) || !navigator.serviceWorker) return;
+    navigator.serviceWorker.ready.then(function(reg){
+      return reg.pushManager.getSubscription();
+    }).then(function(sub){ b.classList.toggle('on', !!sub); }).catch(function(){});
+  }
+
+  document.getElementById('bell').onclick = function(){
+    var standalone = window.matchMedia('(display-mode: standalone)').matches ||
+                     window.navigator.standalone === true;
+    if (!('Notification' in window) || !('PushManager' in window)) {
+      return openSheet('Morning alerts',
+        'This browser can’t do push notifications. On iPhone, add the app to your home screen from Safari and open it from there.',
+        '', null);
+    }
+    if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
+      return openSheet('Add to home screen first',
+        'iOS only allows notifications for installed web apps. Tap the share icon, choose Add to Home Screen, then open the app from your home screen and tap the bell again.',
+        '', null);
+    }
+    if (!vapidKey) {
+      return openSheet('Not configured yet',
+        'The push key hasn’t been set on the server. Add VAPID_PUBLIC_KEY as a repository variable and run the workflow once.',
+        '', null);
+    }
+    openSheet('Morning alerts',
+      'Get a notification each weekday when the new brief is ready. Tapping it opens straight to that day.',
+      'Enable', function(){
+        Notification.requestPermission().then(function(perm){
+          if (perm !== 'granted') {
+            return openSheet('Notifications blocked',
+              'Permission was denied. You can re-enable it in your device settings for this app.', '', null);
+          }
+          navigator.serviceWorker.ready.then(function(reg){
+            return reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: b64ToU8(vapidKey)
+            });
+          }).then(function(sub){
+            document.getElementById('bell').classList.add('on');
+            openSheet('Almost there',
+              'Copy the text below and save it as a repository secret named PUSH_SUBSCRIPTION. That’s a one-time step — after that the alerts just arrive.',
+              'Copy', function(){
+                var ta = document.getElementById('sheetSub');
+                ta.select();
+                navigator.clipboard.writeText(ta.value).then(function(){
+                  document.getElementById('sheetAction').textContent = 'Copied';
+                }).catch(function(){});
+              }, JSON.stringify(sub));
+          }).catch(function(err){
+            openSheet('Couldn’t subscribe', String(err && err.message || err), '', null);
+          });
+        });
+      });
+  };
+
+  // ---------- tabs ----------
+  var dayBox = document.getElementById('day');
+  var dayAudio = document.getElementById('dayAudio');
+  var tab = 'news';
+  function setTab(name){
+    tab = name === 'day' ? 'day' : 'news';
+    document.body.setAttribute('data-tab', tab);
+    [].forEach.call(document.querySelectorAll('.tab'), function(b){
+      var on = b.dataset.tab === tab;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    window.scrollTo({top:0});
+    if (tab === 'day' && !dayState.doc) loadDay();
+  }
+  [].forEach.call(document.querySelectorAll('.tab'), function(b){
+    b.onclick = function(){ setTab(b.dataset.tab); };
+  });
+
+  /* ---------- My Day ----------
+     The plan is published encrypted, because this site is public and a
+     calendar is not. Everything below happens on this device: the key lives
+     in this browser's storage, the files are decrypted here with the
+     browser's own crypto, and nothing readable is ever sent anywhere. */
+  var dayState = { index:null, doc:null, key:null, audioUrl:null, audioWanted:false };
+  var I_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>';
+
+  function u8ToB64u(u8){
+    var bin = ''; for (var i=0;i<u8.length;i++) bin += String.fromCharCode(u8[i]);
+    return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+  function importDayKey(text){
+    var raw;
+    try { raw = b64ToU8(String(text||'').trim()); } catch(e){ return Promise.reject(new Error('format')); }
+    if (raw.length !== 32) return Promise.reject(new Error('format'));
+    return crypto.subtle.importKey('raw', raw, {name:'AES-GCM'}, false, ['decrypt']);
+  }
+  // Layout matches myday.py: 12-byte nonce, then ciphertext and tag. The date
+  // and role are bound in, so a stale or swapped file refuses to open.
+  function openSealed(key, buf, date, kind){
+    var u8 = new Uint8Array(buf);
+    return crypto.subtle.decrypt({
+      name:'AES-GCM', iv:u8.slice(0,12),
+      additionalData:new TextEncoder().encode('whatsup-myday-v1|' + date + '|' + kind)
+    }, key, u8.slice(12));
+  }
+
+  function loadDay(){
+    dayBox.innerHTML = '<div class="state">Loading…</div>';
+    if (!window.crypto || !crypto.subtle) {
+      dayBox.innerHTML = '<div class="state">This browser can’t unlock My Day.<br>Open the app over https in Safari or Chrome.</div>';
+      return;
+    }
+    fetch('myday/index.json?t=' + Date.now())
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .catch(function(){ return null; })
+      .then(function(idx){
+        dayState.index = idx;
+        var saved = store.get('dayKey');
+        if (!idx) return renderDaySetup(!!saved);
+        if (!saved) return renderDayLocked('');
+        unlockDay(saved, true);
+      });
+  }
+
+  function unlockDay(keyText, wasSaved){
+    var idx = dayState.index;
+    importDayKey(keyText).then(function(key){
+      return fetch(idx.plan + '?t=' + Date.now())
+        .then(function(r){ if (!r.ok) throw new Error('missing'); return r.arrayBuffer(); })
+        .then(function(buf){ return openSealed(key, buf, idx.date, 'plan'); })
+        .then(function(plain){
+          dayState.key = key;
+          dayState.doc = JSON.parse(new TextDecoder().decode(plain));
+          store.set('dayKey', String(keyText).trim());
+          renderDay();
+          prepareDayAudio();
+          loadDatesClip();
+        });
+    }).catch(function(err){
+      var why = (err && err.message === 'format')
+        ? 'That doesn’t look like a key. It is 43 letters, numbers, dashes and underscores.'
+        : (err && err.message === 'missing')
+          ? 'Couldn’t download today’s plan. Check your connection and try again.'
+          : wasSaved
+            ? 'The key saved on this device no longer opens the plan. Paste the current one.'
+            : 'That key doesn’t open the plan. Check it matches the MYDAY_KEY secret exactly.';
+      renderDayLocked(why);
+    });
+  }
+
+  function newDayKey(){
+    var raw = new Uint8Array(32);
+    crypto.getRandomValues(raw);
+    var text = u8ToB64u(raw);
+    store.set('dayKey', text);
+    return text;
+  }
+  function showKeySheet(text, fresh){
+    openSheet(fresh ? 'Your key' : 'Your key, for another device',
+      fresh
+        ? 'This key is now saved on this device. Copy it and save it as a repository secret named MYDAY_KEY. Treat it like a password: anyone holding it can read your plan.'
+        : 'Paste this into the My Day tab on your other device. Treat it like a password.',
+      'Copy', function(){
+        var ta = document.getElementById('sheetSub');
+        ta.select();
+        navigator.clipboard.writeText(ta.value).then(function(){
+          document.getElementById('sheetAction').textContent = 'Copied';
+        }).catch(function(){});
+      }, text);
+  }
+
+  // Nothing has been published yet: walk the owner through turning it on.
+  function renderDaySetup(hasKey){
+    dayBox.innerHTML =
+      '<div class="lock">' +
+        '<div class="lock-ico">' + I_LOCK + '</div>' +
+        '<h2>My Day</h2>' +
+        '<p>Your calendar for the day, with a note on what to prepare for each meeting. ' +
+        'It is private: published encrypted and unlocked only on your devices.</p>' +
+        (hasKey
+          ? '<p>Your key is saved on this device. The plan appears after the next morning build, ' +
+            'once both secrets below are in place.</p>'
+          : '') +
+        '<ol>' +
+          '<li>' + (hasKey ? 'Key created. ' : 'Create your key below, then ') +
+            'save it as a repository secret named <code>MYDAY_KEY</code>.</li>' +
+          '<li>In Google Calendar settings, copy your calendar’s <b>secret address in iCal format</b> ' +
+            'and save it as a secret named <code>CALENDAR_ICS_URL</code>.</li>' +
+          '<li>Run the workflow. Your day appears here.</li>' +
+        '</ol>' +
+        '<button class="cta" id="dayMake">' + (hasKey ? 'Show my key again' : 'Create my key') + '</button>' +
+        '<div><button class="lock-alt" id="dayHave">I already have a key</button></div>' +
+      '</div>';
+    document.getElementById('dayMake').onclick = function(){
+      var existing = store.get('dayKey');
+      if (existing) return showKeySheet(existing, true);
+      var text = newDayKey();
+      renderDaySetup(true);
+      showKeySheet(text, true);
+    };
+    document.getElementById('dayHave').onclick = function(){ renderDayLocked(''); };
+  }
+
+  // A plan exists but this device has no working key.
+  function renderDayLocked(message){
+    dayBox.innerHTML =
+      '<div class="lock">' +
+        '<div class="lock-ico">' + I_LOCK + '</div>' +
+        '<h2>My Day is locked</h2>' +
+        '<p>This tab is private to the owner of the calendar. Paste your key to unlock it on this device. ' +
+        'You only do this once.</p>' +
+        '<input id="dayKeyIn" type="password" autocomplete="off" autocapitalize="off" ' +
+          'autocorrect="off" spellcheck="false" placeholder="Paste your key" aria-label="Key">' +
+        '<div class="lock-err" id="dayErr">' + esc(message || '') + '</div>' +
+        '<button class="cta" id="dayUnlock">Unlock</button>' +
+      '</div>';
+    var input = document.getElementById('dayKeyIn');
+    function go(){
+      var v = input.value.trim();
+      if (!v) return;
+      if (!dayState.index) {            // setup not finished: just keep the key
+        store.set('dayKey', v); renderDaySetup(true); return;
+      }
+      document.getElementById('dayErr').textContent = '';
+      unlockDay(v, false);
+    }
+    document.getElementById('dayUnlock').onclick = go;
+    input.addEventListener('keydown', function(e){ if (e.key === 'Enter') go(); });
+  }
+
+  function dayClock(iso, tz){
+    try {
+      return new Date(iso).toLocaleTimeString(undefined,
+        {hour:'numeric', minute:'2-digit', timeZone:tz});
+    } catch(e){
+      return new Date(iso).toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'});
+    }
+  }
+  function todayIn(tz){
+    try { return new Date().toLocaleDateString('en-CA', {timeZone:tz}); }
+    catch(e){ return new Date().toLocaleDateString('en-CA'); }
+  }
+
+  function renderDay(){
+    var doc = dayState.doc, tz = doc.tz, now = Date.now();
+    var isToday = doc.date === todayIn(tz);
+    var nextMarked = false;
+
+    var events = (doc.events || []).map(function(ev){
+      var start = new Date(ev.start).getTime(), end = new Date(ev.end).getTime();
+      var past = isToday && !ev.all_day && end < now;
+      var live = isToday && !ev.all_day && start <= now && end >= now;
+      var next = isToday && !ev.all_day && !nextMarked && start > now;
+      if (next) nextMarked = true;
+
+      var meta = [];
+      if (ev.location) meta.push(esc(ev.location));
+      else if (ev.online) meta.push('Video call');
+      if (ev.who && ev.who.length) {
+        var more = (ev.who_count || ev.who.length) - ev.who.length;
+        meta.push('with ' + esc(ev.who.slice(0,3).join(', ')) +
+          ((ev.who.length > 3 || more > 0)
+            ? ' +' + ((ev.who_count || ev.who.length) - Math.min(3, ev.who.length)) : ''));
+      }
+      var prep = ev.prep
+        ? '<div class="ev-prep' + (ev.priority === 'high' ? ' high' : '') + '">' +
+            (ev.priority === 'high' ? '<b>Prepare</b>' : '') + esc(ev.prep) + '</div>'
+        : '';
+      return '<div class="ev' + (past ? ' past' : '') + '">' +
+        '<div class="ev-time">' + (ev.all_day ? 'All day'
+          : esc(dayClock(ev.start, tz)) + '<small>' + esc(dayClock(ev.end, tz)) + '</small>') + '</div>' +
+        '<div><div class="ev-title">' + esc(ev.title) +
+          (live ? '<span class="ev-badge">Now</span>' : next ? '<span class="ev-badge">Next</span>' : '') +
+        '</div>' +
+        (meta.length ? '<div class="ev-meta">' + meta.join(' · ') + '</div>' : '') + prep +
+        '</div></div>';
+    }).join('');
+
+    var heads = (doc.heads_up || []).map(function(h){ return '<li>' + esc(h) + '</li>'; }).join('');
+    var tomorrow = (doc.tomorrow || []).map(function(ev){
+      return '<div class="tom"><span>' + (ev.all_day ? 'All day' : esc(dayClock(ev.start, tz))) +
+        '</span><span>' + esc(ev.title) + '</span></div>';
+    }).join('');
+    var coming = (doc.dates || []).map(function(d){
+      var when = d.days === 0 ? 'Today' : d.days === 1 ? 'Tomorrow'
+        : new Date(d.date + 'T12:00:00').toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric'});
+      return '<div class="tom"><span>' + esc(when) + '</span><span>' + esc(d.title) + '</span></div>';
+    }).join('');
+    var hasAudio = !!(dayState.index && dayState.index.audio);
+
+    dayBox.innerHTML =
+      '<div class="day-date">' + esc(longDate(doc.date)) + '</div>' +
+      (isToday ? '' : '<div class="day-stale">This is the plan from ' + esc(longDate(doc.date)) +
+        '. Today’s hasn’t been built yet.</div>') +
+      '<p class="day-over">' + esc(doc.overview || '') + '</p>' +
+      (hasAudio
+        ? '<button class="rundown" id="rundown">' +
+            '<span class="rundown-btn" id="rundownIco">' + I_PLAY + '</span>' +
+            '<span class="rundown-main"><span class="rundown-label">Listen to your day</span>' +
+            '<span class="rundown-sub" id="rundownSub">' + fmt(doc.audio_seconds || 0) + '</span></span>' +
+            '<span class="rundown-bar" id="rundownBar"></span></button>'
+        : '') +
+      (heads ? '<ul class="heads">' + heads + '</ul>' : '') +
+      (coming ? '<div class="sec-head"><span>Birthdays and anniversaries</span><i></i></div>' + coming : '') +
+      (events
+        ? '<div class="sec-head"><span>Today</span><i></i></div>' + events
+        : '') +
+      (tomorrow ? '<div class="sec-head"><span>Tomorrow</span><i></i></div>' + tomorrow : '') +
+      '<div class="day-foot">Private. Decrypted on this device only.<br>' +
+        '<button id="dayShowKey">Show my key</button> &nbsp;·&nbsp; ' +
+        '<button id="dayLock">Lock this device</button></div>';
+
+    var rd = document.getElementById('rundown');
+    if (rd) rd.onclick = toggleDayAudio;
+    document.getElementById('dayShowKey').onclick = function(){
+      showKeySheet(store.get('dayKey') || '', false);
+    };
+    document.getElementById('dayLock').onclick = function(){
+      openSheet('Lock this device?',
+        'This removes the key from this device. You will need to paste it again to see My Day here.',
+        'Lock', function(){
+          dayAudio.pause();
+          try { localStorage.removeItem('dayKey'); } catch(e){}
+          dayState.doc = null; dayState.key = null;
+          sheet.classList.remove('open');
+          renderDayLocked('');
+        });
+    };
+    syncDayAudio();
+  }
+
+  /* Decrypt the rundown as soon as the plan opens, not when play is tapped.
+     iOS only lets audio start inside the tap itself; a download and a
+     decryption between the tap and play() would be refused as autoplay. With
+     the audio already sitting in memory, the tap can start it at once. */
+  function prepareDayAudio(){
+    var idx = dayState.index;
+    if (!idx || !idx.audio || dayState.audioUrl) return;
+    fetch(idx.audio + '?t=' + Date.now())
+      .then(function(r){ if (!r.ok) throw new Error('missing'); return r.arrayBuffer(); })
+      .then(function(buf){ return openSealed(dayState.key, buf, idx.date, 'audio'); })
+      .then(function(plain){
+        dayState.audioUrl = URL.createObjectURL(new Blob([plain], {type:'audio/mpeg'}));
+        dayAudio.src = dayState.audioUrl;
+        if (dayState.audioWanted) { dayState.audioWanted = false; dayAudio.play().catch(function(){}); }
+      })
+      .catch(function(){
+        var sub = document.getElementById('rundownSub');
+        if (sub) sub.textContent = 'Audio unavailable today';
+        var rd = document.getElementById('rundown');
+        if (rd) rd.disabled = true;
+      });
+  }
+  function toggleDayAudio(){
+    if (!dayState.audioUrl) { dayState.audioWanted = true; return; }
+    dayAudio.paused ? dayAudio.play().catch(function(){}) : dayAudio.pause();
+  }
+  function syncDayAudio(){
+    var ico = document.getElementById('rundownIco');
+    if (ico) ico.innerHTML = dayAudio.paused ? I_PLAY : I_PAUSE;
+  }
+  dayAudio.addEventListener('play', function(){ audio.pause(); syncDayAudio(); });
+  dayAudio.addEventListener('pause', syncDayAudio);
+  dayAudio.addEventListener('ended', function(){
+    syncDayAudio();
+    var bar = document.getElementById('rundownBar'); if (bar) bar.style.width = '0%';
+  });
+  dayAudio.addEventListener('timeupdate', function(){
+    var total = (dayState.doc && dayState.doc.audio_seconds) || dayAudio.duration || 0;
+    var bar = document.getElementById('rundownBar'), sub = document.getElementById('rundownSub');
+    if (bar && total) bar.style.width = Math.min(100, dayAudio.currentTime / total * 100) + '%';
+    if (sub && total) sub.textContent = fmt(dayAudio.currentTime) + ' / ' + fmt(total);
+  });
+
+  // ---------- boot ----------
+  var savedSpeed = Number(store.get('speed') || 1);
+  if (SPEEDS.indexOf(savedSpeed) !== -1) speed = savedSpeed;
+
+  fetch('push.json').then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(p){ if (p && p.vapidPublicKey) vapidKey = p.vapidPublicKey; })
+    .catch(function(){});
+
+  fetch('episodes.json?t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      data = d;
+      if (!data.episodes || !data.episodes.length) throw new Error('empty');
+
+      // An old home-screen app may still be running a cached shell against a
+      // newer index, or the reverse. Say so instead of rendering nothing.
+      if (!data.menu || !data.episodes[0].segments) {
+        app.innerHTML = '<div class="state">This app needs a refresh.<br>' +
+          'Close it fully and reopen, or remove and re-add it to your home screen.</div>';
+        return;
+      }
+
+      if (data.lengths) LENGTHS = data.lengths;
+      var name = data.show || "What's Up?";
+      document.getElementById('showTitle').textContent = name;
+      document.title = name;
+      document.getElementById('stamp').textContent =
+        'Updated ' + new Date(data.updated).toLocaleString(undefined,
+          {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+
+      var params = new URLSearchParams(location.search);
+      if (params.get('tab') === 'day' && !params.get('episode')) setTab('day');
+
+      // ?episode=YYYY-MM-DD lets a notification open straight to its day
+      var want = params.get('episode');
+      var at = want ? data.episodes.findIndex(function(e){ return e.date === want; }) : -1;
+      dayIdx = at >= 0 ? at : 0;
+
+      loadPrefs();
+      var known = menu().map(function(m){ return m.slug; });
+      prefs.topics = prefs.topics.filter(function(t){ return known.indexOf(t) !== -1; });
+      prefs.length = Math.min(LENGTHS.max, Math.max(LENGTHS.min, prefs.length || LENGTHS['default']));
+
+      // ?topics=a,b shares a mix for this visit without overwriting saved choices
+      var fromUrl = (params.get('topics')||'').split(',')
+        .filter(function(t){ return known.indexOf(t) !== -1; });
+      if (fromUrl.length) { prefs.topics = fromUrl; prefs.done = true; }
+
+      // A position from earlier this morning is good enough to plan with, and
+      // using it now avoids the brief redrawing a moment after it appears.
+      try {
+        var was = JSON.parse(store.get('here') || 'null');
+        if (was && Date.now() - was.at < 3*3600*1000) here = was;
+      } catch(e){}
+
+      bellState();
+
+      if (!prefs.done || !prefs.topics.length) { openSetup(); return; }
+      buildQueue();
+      if (!queue.length) { openSetup(); return; }
+      loadSegment(0, false);
+      var resume = Number(store.get('pos:'+key()) || 0);
+      if (resume > 5 && resume < totalDuration() - 10) seekGlobal(resume);
+      renderPlayer();
+      loadExtras();
+    })
+    .catch(function(){
+      app.innerHTML = '<div class="state">No episodes yet.<br>The first one lands after the workflow runs.</div>';
+    });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+Nvidia has told manufacturing partners to pause server shipments to Malaysia, Singapore, Thailand, and Indonesia, officially as Washington tightens efforts to keep AI chips out of China via transshipment routes. The timing is awkward: Nvidia is also mired in a scandal involving Alice Huang, a former Megaspeed executive who had an affair with CEO Jensen Huang, now facing unproven claims she's a Chinese intelligence asset. Nothing's confirmed, but the overlap makes the chip clampdown look as much political as procedural. For anyone deploying Nvidia hardware in that region, it means less predictable timelines, full stop.
+
+Elsewhere, Anthropic went public the same day Grand Theft Auto six launched as one of the biggest entertainment releases ever — a useful reminder that human craft still beats AI efficiency as a selling point. An AI agent completed the UK's first fully cardless purchase, buying a pizza through a bank-to-bank payment rail on its own, a small but real step for agents handling actual money. And a new paper claims a deterministic subexponential algorithm for the discrete logarithm problem — significant for cryptography research, not an immediate threat to anything running today.
+
+The US Air Force's cloud platform got hacked, with few details so far. And Ladybird, a browser built without a Chromium or Firefox engine underneath, entered alpha — rare in a market down to two real engines.
+
+Watch for whether Nvidia's shipment pause widens beyond these four countries.

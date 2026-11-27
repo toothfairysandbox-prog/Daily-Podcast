@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
+     xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>What's Up?</title>
+    <link>https://toothfairysandbox-prog.github.io/Daily-Podcast/</link>
+    <description>A daily brief you build yourself: markets, tech, sport, business, the world, science and health.</description>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 27 Nov 2026 14:54:55 +0000</lastBuildDate>
+    <atom:link href="https://toothfairysandbox-prog.github.io/Daily-Podcast/feed.xml" rel="self" type="application/rss+xml"/>
+    <itunes:author>What's Up?</itunes:author>
+    <itunes:summary>A daily brief you build yourself: markets, tech, sport, business, the world, science and health.</itunes:summary>
+    <itunes:explicit>false</itunes:explicit>
+    <itunes:category text="Business"><itunes:category text="Investing"/></itunes:category>
+    <itunes:image href="https://toothfairysandbox-prog.github.io/Daily-Podcast/icons/icon-512.png"/>
+    <item>
+      <title>Markets rebound as Nvidia's lifeline fuels rally</title>
+      <description>Stocks are clawing back a brutal November as Nvidia news sparks a global rally and Asian markets explode higher.</description>
+      <pubDate>Fri, 27 Nov 2026 14:45:49 +0000</pubDate>
+      <guid isPermaLink="false">2026-11-27</guid>
+      <enclosure url="https://toothfairysandbox-prog.github.io/Daily-Podcast/audio/2026-11-27/markets-180.mp3" length="861264" type="audio/mpeg"/>
+      <itunes:duration>143</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Global rally lifts bargain hunters, tech still wobbly</title>
+      <description>Global markets rally on bargain-hunting even as tech jitters persist and hot inflation keeps the Fed on edge.</description>
+      <pubDate>Thu, 26 Nov 2026 14:45:49 +0000</pubDate>
+      <guid isPermaLink="false">2026-11-26</guid>
+      <enclosure url="https://toothfairysandbox-prog.github.io/Daily-Podcast/audio/2026-11-26/markets-180.mp3" length="902448" type="audio/mpeg"/>
+      <itunes:duration>150</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Tech-led selloff hits Nasdaq as inflation runs hot</title>
+      <description>A hotter inflation reading and Nvidia's Huang drama send the Nasdaq down sharply, with Korea's market getting hit even harder overnight.</description>
+      <pubDate>Wed, 25 Nov 2026 14:46:08 +0000</pubDate>
+      <guid isPermaLink="false">2026-11-25</guid>
+      <enclosure url="https://toothfairysandbox-prog.github.io/Daily-Podcast/audio/2026-11-25/markets-180.mp3" length="985680" type="audio/mpeg"/>
+      <itunes:duration>164</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Tech Slides as Nvidia Drama, Tariffs Weigh</title>
+      <description>Nvidia's Huang saga and fresh tariff worries hit tech hard, while Asian markets post historic surges overnight.</description>
+      <pubDate>Tue, 24 Nov 2026 14:46:02 +0000</pubDate>
+      <guid isPermaLink="false">2026-11-24</guid>
+      <enclosure url="https://toothfairysandbox-prog.github.io/Daily-Podcast/audio/2026-11-24/markets-180.mp3" length="1408320" type="audio/mpeg"/>
+      <itunes:duration>176</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Huang's Return Lights Up Nasdaq, Up Six Percent</title>
+      <description>Jensen Huang is back as Nvidia's CEO and the whole market is ripping on the news.</description>
+      <pubDate>Mon, 23 Nov 2026 14:46:08 +0000</pubDate>
+      <guid isPermaLink="false">2026-11-23</guid>
+      <enclosure url="https://toothfairysandbox-prog.github.io/Daily-Podcast/audio/2026-11-23/markets-180.mp3" length="913248" type="audio/mpeg"/>
+      <itunes:duration>152</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Anthropic's wobbly debut shakes the AI trade</title>
+      <description>Tech is sliding as Anthropic struggles to hold its IPO price, while Asian markets get hit even harder overnight.</description>
+      <pubDate>Fri, 20 Nov 2026 14:46:02 +0000</pubDate>
+      <guid isPermaLink="false">2026-11-20</guid>
+      <enclosure url="https://toothfairysandbox-prog.github.io/Daily-Podcast/audio/2026-11-20/markets-180.mp3" length="785088" type="audio/mpeg"/>
+      <itunes:duration>130</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Anthropic IPO prices, Nasdaq surges on AI reignition</title>
+      <description>Anthropic's record IPO lights a fire under tech as the Nasdaq jumps and yields slide on the Fed minutes.</description>
+      <pubDate>Thu, 19 Nov 2026 14:49:01 +0000</pubDate>
+      <guid isPermaLink="false">2026-11-19</guid>
+      <enclosure url="https://toothfairysandbox-prog.github.io/Daily-Podcast/audio/2026-11-19/markets-180.mp3" length="821088" type="audio/mpeg"/>
+      <itunes:duration>136</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Trump, Xi and Putin meet for first time together</title>
+      <description>A historic three-way summit in Shenzhen, a Gulf flare-up with Iran, and a Ukrainian strike on a Russian bridge.</description>
+      <pubDate>Wed, 18 Nov 2026 14:46:05 +0000</pubDate>
+      <guid isPermaLink="false">2026-11-18</guid>
+      <enclosure url="https://toothfairysandbox-prog.github.io/Daily-Podcast/audio/2026-11-18/world-180.mp3" length="1139712" type="audio/mpeg"/>
+      <itunes:duration>142</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Tech Sells Off as AI Jitters, Iran Risk Mount</title>
+      <description>Nvidia's China warning and a tanker strike in Hormuz send stocks sliding and the VIX up nearly twenty percent.</description>
+      <pubDate>Tue, 17 Nov 2026 07:16:51 +0000</pubDate>
+      <guid isPermaLink="false">2026-11-17</guid>
+      <enclosure url="https://toothfairysandbox-prog.github.io/Daily-Podcast/audio/2026-11-17/markets-180.mp3" length="958176" type="audio/mpeg"/>
+      <itunes:duration>159</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Tech Slide Drags Markets Lower on Dollar Strength</title>
+      <description>Tech led a broad selloff as the dollar surges and Japan's economy unexpectedly contracts.</description>
+      <pubDate>Tue, 17 Nov 2026 00:16:06 +0000</pubDate>
+      <guid isPermaLink="false">2026-11-16</guid>
+      <enclosure url="https://toothfairysandbox-prog.github.io/Daily-Podcast/audio/2026-11-16/markets-long.mp3" length="635276" type="audio/mpeg"/>
+      <itunes:duration>158</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Nvidia Crisis and Hot Inflation Slam Markets</title>
+      <description>Nvidia's leadership crisis and hot inflation data are dragging tech and bonds lower together.</description>
+      <pubDate>Fri, 13 Nov 2026 16:45:56 +0000</pubDate>
+      <guid isPermaLink="false">2026-11-13</guid>
+      <enclosure url="https://toothfairysandbox-prog.github.io/Daily-Podcast/audio/2026-11-13/markets-long.mp3" length="690956" type="audio/mpeg"/>
+      <itunes:duration>172</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Brief</title>
+      <description></description>
+      <pubDate>Fri, 13 Nov 2026 01:52:57 +0000</pubDate>
+      <guid isPermaLink="false">2026-11-12</guid>
+      <enclosure url="https://toothfairysandbox-prog.github.io/Daily-Podcast/audio/2026-11-12/markets-long.mp3" length="720236" type="audio/mpeg"/>
+      <itunes:duration>180</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+  </channel>
+</rss>
